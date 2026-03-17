@@ -1,93 +1,41 @@
-import subprocess
-
-subprocess.run("which plumed", shell=True)
-subprocess.run("plumed config module opes", shell=True)
-subprocess.run("echo $PLUMED_KERNEL", shell=True)
-subprocess.run("which gmx_mpi", shell=True)
+import plumed
 
 from ase import Atoms
 from ase.build import molecule
 from ase.calculators.plumed import Plumed
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
-from ase.md.nvtberendsen import NVTBerendsen  # fallback if Bussi not available
-from ase.md.nvtbussi import NVTBussi
+from ase.md.bussi import Bussi
 from ase import units
 
-from mace.calculators import MACECalculator
+from mace.calculators import mace_mp
 
-# -----------------------
-# 1. Build toy system
-# -----------------------
-atoms = molecule("H2O")  # simple molecule
+# Simulation parameters
+temperature = 300
+timestep = units.fs
+
+# Setup system
+atoms = molecule("H2O")
 atoms.center(vacuum=5.0)
 
-# -----------------------
-# 2. MACE calculator
-# -----------------------
-calc = MACECalculator(
-    model_path="your_model.model",  # <-- replace with your model
-    device="cpu"  # or "cuda"
-)
+# Setup MACE calculator
+calc = mace_mp(model="small", device="cpu")
 
-# -----------------------
-# 3. PLUMED input (OPES)
-# -----------------------
-plumed_input = """
-# Distance between atoms 1 and 2
-d: DISTANCE ATOMS=1,2
-
-# OPES bias
-opes: OPES_METAD ARG=d \
-    PACE=200 \
-    BARRIER=20 \
-    TEMP=300
-
-# Output
-PRINT STRIDE=10 ARG=d,opes.bias FILE=COLVAR
-"""
-
-# -----------------------
-# 4. Wrap calculator with PLUMED
-# -----------------------
-plumed_calc = Plumed(
-    calc=calc,
-    input=plumed_input,
-    timestep=1.0 * units.fs,
-    atoms=atoms
-)
-
+# Setup PLUMED OPES
+setup = ["d: DISTANCE ATOMS=1,2", f"opes: OPES_METAD ARG=d PACE=200 BARRIER=20 TEMP={temperature}", "PRINT STRIDE=10 ARG=d,opes.bias FILE=COLVAR"]
+plumed_calc = Plumed(calc=calc, input=setup, timestep=timestep, atoms=atoms)
 atoms.calc = plumed_calc
 
-# -----------------------
-# 5. Initialize velocities
-# -----------------------
-temperature = 300  # K
+# Setup Bussi propagator
 MaxwellBoltzmannDistribution(atoms, temperature_K=temperature)
+dyn = Bussi(atoms, timestep=timestep, temperature_K=temperature, taut=100*timestep)
 
-# -----------------------
-# 6. NVT dynamics (Bussi thermostat)
-# -----------------------
-timestep = 1.0 * units.fs
-
-dyn = NVTBussi(
-    atoms,
-    timestep,
-    temperature_K=temperature,
-    taut=100 * units.fs  # thermostat time constant
-)
-
-# -----------------------
-# 7. Run dynamics
-# -----------------------
+# Extract useful quantities
 def print_status(a=atoms):
-    epot = a.get_potential_energy()
+    epot = a.get_potential_energy()[0]
     ekin = a.get_kinetic_energy()
     temp = ekin / (1.5 * len(a) * units.kB)
-    print(f"Step energy: Epot={epot:.3f} eV, Temp={temp:.1f} K")
-
+    print(f"Epot = {epot:.3f}\nEmec = {epot+ekin:.3f}\nTemp = {temp:.1f}\n")
 dyn.attach(print_status, interval=50)
 
-print("Starting MD...")
+# Run simulation
 dyn.run(2000)
-
-print("Done.")

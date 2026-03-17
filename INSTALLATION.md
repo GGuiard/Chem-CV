@@ -2,9 +2,10 @@
 
 conda create -n md_env python=3.11
 conda activate md_env
-conda install -c conda-forge numpy pandas matplotlib scipy notebook mdtraj mdanalysis cmake
+conda install -c conda-forge numpy pandas matplotlib scipy notebook mdtraj mdanalysis py-plumed cmake
 pip install torch torchvision
 pip install mace-torch
+pip install cuequivariance cuequivariance-torch
 pip install ase
 
 wget https://github.com/plumed/plumed2/releases/download/v2.10.0/plumed-2.10.0.tgz
@@ -43,3 +44,9 @@ source $HOME/gromacs-plumed/bin/GMXRC
 # <<< gmx_mpi initialize <<<
 <!-- save and exit with Ctrl+O, Enter, Ctrl+X -->
 source ~/.bashrc
+
+<!-- check installation after restarting terminal -->
+which plumed
+plumed config module opes
+echo $PLUMED_KERNEL
+which gmx_mpi
