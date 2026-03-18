@@ -9,7 +9,7 @@ pip install cuequivariance cuequivariance-torch
 pip install ase
 
 wget https://github.com/plumed/plumed2/releases/download/v2.10.0/plumed-2.10.0.tgz
-tar -xvzf plumed-2.10.0.tgz
+tar -xf plumed-2.10.0.tgz
 cd plumed-2.10.0
 ./configure --prefix=$HOME/plumed-opes --enable-modules=opes
 make -j$(nproc)
@@ -27,8 +27,9 @@ export PLUMED_KERNEL=$HOME/plumed-opes/lib/libplumedKernel.so
 source ~/.bashrc
 
 cd ~
+conda activate md_env
 wget https://ftp.gromacs.org/gromacs/gromacs-2024.3.tar.gz
-tar -xvzf gromacs-2024.3.tar.gz
+tar -xf gromacs-2024.3.tar.gz
 cd gromacs-2024.3
 plumed patch -p
 <!-- enter the number of the corresponding version of gromacs -->
@@ -47,6 +48,8 @@ source ~/.bashrc
 
 <!-- check installation after restarting terminal -->
 which plumed
-plumed config module opes
+plumed config module opesP
 echo $PLUMED_KERNEL
 which gmx_mpi
+
+<!-- strongly advise to disable the autoinstalled extension "Python Environments" if working on VS Code -->

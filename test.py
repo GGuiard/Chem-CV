@@ -21,7 +21,7 @@ atoms.center(vacuum=5.0)
 calc = mace_mp(model="small", device="cpu")
 
 # Setup PLUMED OPES
-setup = ["d: DISTANCE ATOMS=1,2", f"opes: OPES_METAD ARG=d PACE=200 BARRIER=20 TEMP={temperature}", "PRINT STRIDE=10 ARG=d,opes.bias FILE=COLVAR"]
+setup = ["UNITS LENGTH=A", "d: DISTANCE ATOMS=1,2", f"opes: OPES_METAD ARG=d PACE=200 BARRIER=20 TEMP={temperature}", "PRINT STRIDE=10 ARG=d,opes.bias FILE=COLVAR", "FLUSH STRIDE=10"]
 plumed_calc = Plumed(calc=calc, input=setup, timestep=timestep, atoms=atoms)
 atoms.calc = plumed_calc
 
