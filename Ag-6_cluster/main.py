@@ -33,7 +33,7 @@ atoms.center()
 calc = mace_mp(model="small", device="cpu")
 
 # Setup PLUMED OPES
-input = open("plumed.dat", "r").read().splitlines()
+input = open("plumed-metadynamics.dat", "r").read().splitlines() # STATE_WFILE=STATE STATE_WSTRIDE=10*100 STORE_STATES
 plumed_calc = Plumed(calc, input, timestep, atoms, kT)
 atoms.calc = plumed_calc
 
