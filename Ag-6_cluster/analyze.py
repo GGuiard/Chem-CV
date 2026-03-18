@@ -1,7 +1,7 @@
 import numpy as np
 
 # TODO:
-# - make functions understand that they need to use a parameter only if its given (ex: weights, masks)
+# - make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
 # - for bootstrap and block add the possibility to choose specify a function to apply to the data
 
 def logw_to_w(logw, KBT):
@@ -26,9 +26,16 @@ def cum_average(data, weights=None, use_weights=False):
 
 def population(data, bins, weights=None, use_weight=False): 
     if use_weight:
-        pop = np.histogram(data, bins, density=True, weights=weights) # test if weights=None is okay
+        pop = np.histogram(data, bins, density=True, weights=weights)[0] # test if weights=None is okay
     else:
-        pop = np.histogram(data, bins, density=True)
+        pop = np.histogram(data, bins, density=True)[0]
+    return pop
+
+def population_2d(data1, data2, bins, weights=None, use_weight=False): 
+    if use_weight:
+        pop = np.histogram2d(data1, data2, bins, density=True, weights=weights)[0] # test if weights=None is okay
+    else:
+        pop = np.histogram2d(data1, data2, bins, density=True)[0]
     return pop
 
 def bootstrap(data, nb_bootstraps, weights=None, use_weight=False):
