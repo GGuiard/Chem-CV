@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
+# import cmocean.cm as cmo
 import numpy as np
 
 # TODO: 
@@ -50,16 +52,20 @@ import numpy as np
 #     plt.ylabel(r"$F(\psi)\ [kJ/mol]$")
 #     plt.show()
 
-# def fes_phipsi(grid_1, grid_2, fes, ref=True, colorbar=False):
-#     contours = np.linspace(-10, 80, 15)
-#     im = plt.contourf(grid_1, grid_2, fes, levels=contours)
-#     plt.xlim((-np.pi,np.pi))
-#     plt.ylim((-np.pi,np.pi))
-#     plt.xlabel(r"$\phi\ [rad]$")
-#     plt.ylabel(r"$\psi\ [rad]$")
-#     if colorbar:
-#         plt.colorbar(im, label=r"$F(\phi,\psi)\ [kJ/mol]$")
-#     plt.show()
+def fes_2D(grid_c, grid_r, fes):
+    fig, ax = plt.subplots(layout='tight')
+    im = ax.contourf(grid_c, grid_r, fes, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
+    cp = ax.contour(grid_c, grid_r, fes, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+
+    ax.set_xlabel('Coordination', fontsize=40)
+    ax.set_ylabel('Gyration', fontsize=40)
+    ax.tick_params(axis='y', labelsize=25)
+    ax.tick_params(axis='x', labelsize=25)
+
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label(label='FES [eV]', fontsize=40)
+    cbar.ax.tick_params(labelsize=32)
+    # fig.show()
 
 # def err_fes_phipsi(grid_1, grid_2, err, ref=True, colorbar=False):
 #     im = plt.contourf(grid_1, grid_2, err, levels=15)

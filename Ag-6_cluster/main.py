@@ -10,6 +10,8 @@ from ase import units
 
 from mace.calculators import mace_mp
 
+import numpy as np
+
 import os
 import subprocess
 
@@ -22,6 +24,8 @@ L = 16
 kT = units.kB*T
 timestep = 5*units.fs
 taut = 50*units.fs
+total_time = 50*units.fs
+nb_steps = total_time//timestep
 
 # Setup system
 atoms = read("init.xyz")
@@ -41,5 +45,14 @@ atoms.calc = plumed_calc
 MaxwellBoltzmannDistribution(atoms, temperature_K=T)
 dyn = Bussi(atoms, timestep, T, taut)
 
+# Extract useful quantities
+interval=50
+Epot, Ekin = np.empty(nb_steps//interval, dtype=np.float64), np.empty(nb_steps//interval, dtype=np.float64)
+i = 0
+def print_status(a=atoms):
+    Epot[i], Ekin[i] = a.get_potential_energy()[0], a.get_kinetic_energy()
+    i += 1
+dyn.attach(print_status, interval)
+
 # Run simulation
-dyn.run(10000)
+dyn.run(nb_steps)

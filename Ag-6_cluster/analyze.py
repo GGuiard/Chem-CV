@@ -3,12 +3,13 @@ import numpy as np
 # TODO:
 # - make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
 # - for bootstrap and block add the possibility to choose specify a function to apply to the data
+# - be initialized with temp
 
-def logw_to_w(logw, KBT):
-    return np.exp(logw/KBT)
+def logw_to_w(logw, kT):
+    return np.exp(logw/kT)
 
-def fes(pop, KBT):
-    return -KBT*np.ma.log(pop)
+def fes(pop, kT):
+    return -kT*np.ma.log(pop)
 
 def bin_to_grid(bins):
     return (bins[1:]+bins[:-1])/2
@@ -90,7 +91,7 @@ def block_pop(data, bins, nb_blocks, weights=None, use_weight=False):
     av, std = np.average(pop_blocks, axis=0), np.std(pop_blocks, axis=0)
     return av, std, pop_blocks
 
-def error_fes(pop_list, KBT):
-    fes_list = fes(pop_list, KBT)
+def error_fes(pop_list, kT):
+    fes_list = fes(pop_list, kT)
     av, std = np.average(fes_list, axis=0), np.std(fes_list, axis=0)
     return av, std, fes_list
