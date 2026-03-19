@@ -1,0 +1,137 @@
+PLUMED: PLUMED is starting
+PLUMED: Version: 2.9.0 (git: 8a78b4071) compiled on Apr 15 2024 at 13:06:09
+PLUMED: Please cite these papers when using PLUMED [1][2]
+PLUMED: For further information see the PLUMED web page at http://www.plumed.org
+PLUMED: Root: /leonardo/pub/userexternal/lbonati1/software/plumed/plumed2-2.9-gcc12/lib/plumed
+PLUMED: For installed feature, see /leonardo/pub/userexternal/lbonati1/software/plumed/plumed2-2.9-gcc12/lib/plumed/src/config/config.txt
+PLUMED: Molecular dynamics engine: LAMMPS
+PLUMED: Precision of reals: 8
+PLUMED: Running over 1 node
+PLUMED: Number of threads: 1
+PLUMED: Cache line size: 512
+PLUMED: Number of atoms: 194
+PLUMED: File suffix: 
+PLUMED: FILE: plumed.dat
+PLUMED: Action UNITS
+PLUMED:   with label @0
+PLUMED:   length: A = 0.1 nm
+PLUMED:   energy: eV = 96.4853 kj/mol
+PLUMED:   time: ps
+PLUMED:   charge: e
+PLUMED:   mass: amu
+PLUMED:   using physical units
+PLUMED:   inside PLUMED, Boltzmann constant is 8.61733e-05
+PLUMED: Action GROUP
+PLUMED:   with label n1
+PLUMED:   list of atoms:
+PLUMED:  193
+PLUMED: Action GROUP
+PLUMED:   with label n2
+PLUMED:   list of atoms:
+PLUMED:  194
+PLUMED: Action COM
+PLUMED:   with label com_n2
+PLUMED:   serial associated to this virtual atom is 195
+PLUMED:   of atoms:
+PLUMED:  193 194
+PLUMED:   mass weighted
+PLUMED:   broken molecules will be rebuilt assuming atoms are in the proper order
+PLUMED: Action DISTANCE
+PLUMED:   with label d_n2
+PLUMED:   between atoms 193 194
+PLUMED:   using periodic boundary conditions
+PLUMED: Action COM
+PLUMED:   with label com_surf
+PLUMED:   serial associated to this virtual atom is 196
+PLUMED:   of atoms:
+PLUMED:  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+PLUMED:   mass weighted
+PLUMED:   broken molecules will be rebuilt assuming atoms are in the proper order
+PLUMED: Action DISTANCE
+PLUMED:   with label d_n2_surf
+PLUMED:   between atoms 196 195
+PLUMED:   without periodic boundary conditions
+PLUMED:   added component to this action:  d_n2_surf.x 
+PLUMED:   added component to this action:  d_n2_surf.y 
+PLUMED:   added component to this action:  d_n2_surf.z 
+PLUMED:   WARNING: components will not have the proper periodicity - see manual
+PLUMED: Action COORDINATION
+PLUMED:   with label coord
+PLUMED:   between two groups of 2 and 192 atoms
+PLUMED:   first group:
+PLUMED:   193  194  
+PLUMED:   second group:
+PLUMED:   1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  
+PLUMED:   25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  
+PLUMED:   50  51  52  53  54  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72  73  74  
+PLUMED:   75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99  
+PLUMED:   100  101  102  103  104  105  106  107  108  109  110  111  112  113  114  115  116  117  118  119  120  121  122  123  124  
+PLUMED:   125  126  127  128  129  130  131  132  133  134  135  136  137  138  139  140  141  142  143  144  145  146  147  148  149  
+PLUMED:   150  151  152  153  154  155  156  157  158  159  160  161  162  163  164  165  166  167  168  169  170  171  172  173  174  
+PLUMED:   175  176  177  178  179  180  181  182  183  184  185  186  187  188  189  190  191  192  
+PLUMED:   using periodic boundary conditions
+PLUMED:   contacts are counted with cutoff 2.5.  Using rational switching function with parameters d0=0 nn=6 mm=12
+PLUMED: Action UPPER_WALLS
+PLUMED:   with label dwall
+PLUMED:   with arguments d_n2
+PLUMED:   added component to this action:  dwall.bias 
+PLUMED:   at 2.000000
+PLUMED:   with an offset 0.000000
+PLUMED:   with force constant 0.200000
+PLUMED:   and exponent 2.000000
+PLUMED:   rescaled 0.100000
+PLUMED:   added component to this action:  dwall.force2 
+PLUMED: Action EXTRACV
+PLUMED:   with label qN2
+PLUMED:   name: CHARGECV
+PLUMED: Action EXTRACV
+PLUMED:   with label qtot
+PLUMED:   name: TOTALCHARGE
+PLUMED: Action OPES_METAD_EXPLORE
+PLUMED:   with label bias
+PLUMED:   with arguments d_n2 coord
+PLUMED:   added component to this action:  bias.bias 
+PLUMED:   added component to this action:  bias.rct 
+PLUMED:   added component to this action:  bias.zed 
+PLUMED:   added component to this action:  bias.neff 
+PLUMED:   added component to this action:  bias.nker 
+PLUMED:   temperature = 700
+PLUMED:   beta = 16.5779
+PLUMED:   depositing new kernels with PACE = 100
+PLUMED:   expected BARRIER is 1
+PLUMED:   using target distribution with BIASFACTOR gamma = 16.5779
+PLUMED:   adaptive SIGMA will be used, with ADAPTIVE_SIGMA_STRIDE = 1000
+PLUMED:     thus the first x kernel depositions will be skipped, x = ADAPTIVE_SIGMA_STRIDE/PACE = 10
+PLUMED:   kernels are truncated with KERNELS_CUTOFF = 5.7581
+PLUMED:   the value at cutoff is = 6.3142e-08
+PLUMED:   regularization EPSILON = 0.345006
+PLUMED:   kernels will be compressed when closer than COMPRESSION_THRESHOLD = 1
+PLUMED:   Bibliography: [3][4]
+PLUMED: Action PRINT
+PLUMED:   with label @12
+PLUMED:   with stride 100
+PLUMED:   with arguments d_n2 d_n2_surf.x d_n2_surf.y d_n2_surf.z coord dwall.bias dwall.force2 qN2 qtot bias.bias bias.rct bias.zed bias.neff bias.nker
+PLUMED:   on file COLVAR
+PLUMED:   with format  %f
+PLUMED: Action FLUSH
+PLUMED:   with label @13
+PLUMED:   with stride 100
+PLUMED: END FILE: plumed.dat
+PLUMED: Timestep: 0.000500
+PLUMED: KbT has not been set by the MD engine
+PLUMED: It should be set by hand where needed
+PLUMED: Relevant bibliography:
+PLUMED:   [1] The PLUMED consortium, Nat. Methods 16, 670 (2019)
+PLUMED:   [2] Tribello, Bonomi, Branduardi, Camilloni, and Bussi, Comput. Phys. Commun. 185, 604 (2014)
+PLUMED:   [3] M. Invernizzi and M. Parrinello, J. Phys. Chem. Lett. 11, 2731-2736 (2020)
+PLUMED:   [4] M. Invernizzi and M. Parrinello, J. Chem. Theory Comput. 18, 3988-3996 (2022)
+PLUMED: Please read and cite where appropriate!
+PLUMED: Finished setup
+PLUMED:                                               Cycles        Total      Average      Minimum      Maximum
+PLUMED:                                                    1   395.291746   395.291746   395.291746   395.291746
+PLUMED: 1 Prepare dependencies                       2200121     7.048754     0.000003     0.000001     0.003530
+PLUMED: 2 Sharing data                               2200121    29.957123     0.000014     0.000006     0.003132
+PLUMED: 3 Waiting for data                           2200121     5.396145     0.000002     0.000001     0.000683
+PLUMED: 4 Calculating (forward loop)                 2200121   283.620459     0.000129     0.000054     0.010373
+PLUMED: 5 Applying (backward loop)                   2200121    13.965643     0.000006     0.000005     0.001217
+PLUMED: 6 Update                                     2200121    25.032452     0.000011     0.000000     8.081354
