@@ -12,19 +12,19 @@ import matplotlib.pyplot as plt
 import os
 import subprocess
 
-os.chdir("Ag-6_cluster")
+os.chdir("N2-Fe")
 subprocess.run("rm -f bck.* COLVAR KERNELS STATE HILLS", shell=True)
 
 import analyze
 import figures
 
 # Simulation parameters
-T = 100 # K
+T = 700 # K
 L = 16 # A
 kT = units.kB*T
-timestep = 5 # fs
-taut = 50 # fs
-total_time = 10000 # fs
+timestep = 0.5 # fs
+taut = 100 # fs
+total_time = 1000 # fs
 nb_steps = total_time//timestep
 
 # Setup system
@@ -35,10 +35,10 @@ atoms.center()
 nb_atoms = len(atoms)
 
 # Setup MACE calculator
-calc = mace_mp(model="small")
+calc = mace_mp(model='mh-0', head='oc20_usemppbe')
 
 # Setup PLUMED OPES
-input = open("plumed-metadynamics.dat", "r").read().splitlines()
+input = open("plumed-unbiased.dat", "r").read().splitlines()
 plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
 atoms.calc = plumed_calc
 
