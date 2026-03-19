@@ -11,6 +11,7 @@ from ase import units
 from mace.calculators import mace_mp
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import subprocess
@@ -18,13 +19,16 @@ import subprocess
 os.chdir("Ag-6_cluster")
 subprocess.run("rm -f bck.* COLVAR KERNELS STATE", shell=True)
 
+import analyze
+import figures
+
 # Simulation parameters
-T = 100
-L = 16
+T = 100 # K
+L = 16 # A
 kT = units.kB*T
-timestep = 5*units.fs
-taut = 50*units.fs
-total_time = 50*units.fs
+timestep = 5 # fs
+taut = 50 # fs
+total_time = 10000 # fs
 nb_steps = total_time//timestep
 
 # Setup system
@@ -32,27 +36,37 @@ atoms = read("init.xyz")
 atoms.set_cell([L, L, L])
 atoms.set_pbc(True)
 atoms.center()
+nb_atoms = len(atoms)
 
 # Setup MACE calculator
 calc = mace_mp(model="small", device="cpu")
 
 # Setup PLUMED OPES
-input = open("plumed-metadynamics.dat", "r").read().splitlines() # STATE_WFILE=STATE STATE_WSTRIDE=10*100 STORE_STATES
-plumed_calc = Plumed(calc, input, timestep, atoms, kT)
+input = open("plumed-unbiased.dat", "r").read().splitlines() # STATE_WFILE=STATE STATE_WSTRIDE=10*100 STORE_STATES
+plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
 atoms.calc = plumed_calc
 
 # Setup Bussi propagator
 MaxwellBoltzmannDistribution(atoms, temperature_K=T)
-dyn = Bussi(atoms, timestep, T, taut)
+dyn = Bussi(atoms, timestep*units.fs, T, taut*units.fs)
 
 # Extract useful quantities
 interval=50
-Epot, Ekin = np.empty(nb_steps//interval, dtype=np.float64), np.empty(nb_steps//interval, dtype=np.float64)
+Epot, Ekin = np.empty(nb_steps//interval+1, dtype=np.float64), np.empty(nb_steps//interval+1, dtype=np.float64)
 i = 0
 def print_status(a=atoms):
+    global i # to change
     Epot[i], Ekin[i] = a.get_potential_energy()[0], a.get_kinetic_energy()
     i += 1
 dyn.attach(print_status, interval)
 
 # Run simulation
 dyn.run(nb_steps)
+
+# Analyze
+Emec, av_Emec, std_Emec = analyze.Emec(Epot, Ekin)
+Temp, av_Temp, std_Temp = analyze.T(Ekin, nb_atoms)
+
+figures.trj_E(Epot, Emec, av_Emec, std_Emec)
+figures.trj_T(Temp, av_Temp, std_Temp)
+plt.show()

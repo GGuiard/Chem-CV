@@ -9,73 +9,108 @@ import numpy as np
 #   - give the possibility to not show err in fes1D plots
 #   - setup save option, location, name, dpi, transparent... and an option to not show the plots if saved
 #   - make multiple plots with all the trj, all the fes
+#   - change cmap
 
-# def trj_phi(time, phi, transient=0):
-#     if transient!=0:
-#         plt.axhspan(0, time[transient], color='grey', alpha=0.3)
-#     plt.plot(phi, time, 'o', ms=1)
-#     plt.xlim((-np.pi,np.pi))
-#     plt.xlabel(r"$\phi\ [rad]$")
-#     plt.ylabel("t [ps]")
-#     plt.show()
+def trj_E(Epot, Emec, av, std):
+    fig, ax = plt.subplots(layout='tight')
+    ax.axhspan(av-std, av+std, color='grey', alpha=0.3)
+    ax.plot(Epot, label=r"$E_P$")
+    ax.plot(Emec, label=r"$E_M$")
+    ax.axhline(av, color='k', linestyle='--')
 
-# def trj_psi(time, psi, transient=0):
-#     plt.plot(psi, time, 'o', ms=1)
-#     plt.xlim((-np.pi,np.pi))
-#     plt.xlabel(r"$\psi\ [rad]$")
-#     plt.ylabel("t [ns]")
-#     plt.show()
+    ax.set_xlabel("number of frame")
+    ax.set_ylabel("E [eV]")
+    ax.legend()
 
-# def trj_phipsi(phi, psi):
-#     plt.plot(phi, psi, 'o', ms=1)
-#     plt.xlabel(r"$\phi\ [rad]$")
-#     plt.ylabel(r"$\psi\ [rad]$")
-#     plt.xlim((-np.pi,np.pi))
-#     plt.ylim((-np.pi,np.pi))
-#     plt.show()
+    return fig
 
-# def fes_phi(grid, fes, err, ref=True):
-#     plt.fill_between(grid, fes-err, fes+err, alpha=0.3)
-#     plt.plot(grid, fes)
-#     plt.xlim((-np.pi,np.pi))
-#     plt.ylim(-10,80)
-#     plt.xlabel(r"$\phi\ [rad]$")
-#     plt.ylabel(r"$F(\phi)\ [kJ/mol]$")
-#     plt.show()
+def trj_T(T, av, std):
+    fig, ax = plt.subplots(layout='tight')
+    ax.axhspan(av-std, av+std, color='grey', alpha=0.3)
+    ax.plot(T)
+    ax.axhline(av, color='k', linestyle='--')
 
-# def fes_psi(grid, fes, err, ref=False):
-#     plt.fill_between(grid, fes-err, fes+err, alpha=0.3)
-#     plt.plot(grid, fes)
-#     plt.xlim((-np.pi,np.pi))
-#     plt.ylim(-5,40)
-#     plt.xlabel(r"$\psi\ [rad]$")
-#     plt.ylabel(r"$F(\psi)\ [kJ/mol]$")
-#     plt.show()
+    ax.set_xlabel("number of frame")
+    ax.set_ylabel("T [K]")
+
+    return fig
+
+def trj_c(time, c, transient=0):
+    fig, ax = plt.subplots(layout='tight')
+    if transient!=0:
+        ax.axvspan(0, time[transient], color='grey', alpha=0.3)
+    ax.plot(time, c, 'o', ms=1)
+
+    ax.set_xlabel("t [fs]")
+    ax.set_ylabel("Coordination")
+
+    return fig
+
+def trj_r(time, r, transient=0):
+    fig, ax = plt.subplots(layout='tight')
+    if transient!=0:
+        ax.axvspan(0, time[transient], color='grey', alpha=0.3)
+    ax.plot(time, r, 'o', ms=1)
+
+    ax.set_xlabel("t [fs]")
+    ax.set_ylabel("Gyration")
+
+    return fig
+
+def trj_2D(c, r): # add color with time or make animation
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(c, r, 'o', ms=1)
+
+    ax.set_xlabel("Coordination")
+    ax.set_ylabel("Gyration")
+
+    return fig
+
+def fes_c(grid, fes, err): # add pop and err
+    fig, ax = plt.subplots(layout='tight')
+    ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
+    ax.plot(grid, fes)
+
+    ax.set_xlabel("Coordination")
+    ax.set_ylabel("FES [eV]")
+    
+    return fig
+
+def fes_r(grid, fes, err): # add pop and err
+    fig, ax = plt.subplots(layout='tight')
+    ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
+    ax.plot(grid, fes)
+
+    ax.set_xlabel("Gyration")
+    ax.set_ylabel("FES [eV]")
+    
+    return fig
 
 def fes_2D(grid_c, grid_r, fes):
     fig, ax = plt.subplots(layout='tight')
-    im = ax.contourf(grid_c, grid_r, fes, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
-    cp = ax.contour(grid_c, grid_r, fes, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+    im = ax.contourf(grid_c, grid_r, fes.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
+    ax.contour(grid_c, grid_r, fes.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
 
-    ax.set_xlabel('Coordination', fontsize=40)
-    ax.set_ylabel('Gyration', fontsize=40)
-    ax.tick_params(axis='y', labelsize=25)
-    ax.tick_params(axis='x', labelsize=25)
+    ax.set_xlabel("Coordination")
+    ax.set_ylabel("Gyration")
 
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(label='FES [eV]', fontsize=40)
-    cbar.ax.tick_params(labelsize=32)
-    # fig.show()
+    cbar.set_label(label="FES [eV]")
 
-# def err_fes_phipsi(grid_1, grid_2, err, ref=True, colorbar=False):
-#     im = plt.contourf(grid_1, grid_2, err, levels=15)
-#     plt.xlim((-np.pi,np.pi))
-#     plt.ylim((-np.pi,np.pi))
-#     plt.xlabel(r"$\phi\ [rad]$")
-#     plt.ylabel(r"$\psi\ [rad]$")
-#     if colorbar:
-#         plt.colorbar(im, label=r"$Err(F(\phi,\psi))\ [kJ/mol]$")
-#     plt.show()
+    return fig
+
+def err_fes_2D(grid_c, grid_r, err):
+    fig, ax = plt.subplots(layout='tight')
+    im = ax.contourf(grid_c, grid_r, err.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
+    ax.contour(grid_c, grid_r, err.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+
+    ax.set_xlabel("Coordination")
+    ax.set_ylabel("Gyration")
+
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label(label="Err(FES) [eV]")
+
+    return fig
 
 # plt.plot(av_phi)
 # plt.xlabel("number of frames")
