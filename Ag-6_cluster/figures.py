@@ -10,6 +10,7 @@ import numpy as np
 #   - setup save option, location, name, dpi, transparent... and an option to not show the plots if saved
 #   - make multiple plots with all the trj, all the fes
 #   - change cmap
+#   - try scipy interpolation
 
 def trj_E(Epot, Emec, av, std):
     fig, ax = plt.subplots(layout='tight')
@@ -112,14 +113,38 @@ def err_fes_2D(grid_c, grid_r, err):
 
     return fig
 
-# plt.plot(av_phi)
-# plt.xlabel("number of frames")
-# plt.ylabel(r"$\langle\phi\rangle\ [rad]$")
-# plt.show()
+def av_c(time, av):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, av, 'o', ms=1)
 
-# plt.axhspan(av_phiA-std_phiA, av_phiA+std_phiA, alpha=0.2)
-# plt.axhline(av_phiA, color='C0', linestyle='--')
-# plt.plot(phiA, 'o', ms=3)
-# plt.xlabel("number of partitions")
-# plt.ylabel(r"$\langle\phi\rangle_A\ [rad]$")
-# plt.show()
+    ax.set_xlabel("t [fs]")
+    ax.set_ylabel(r"$\langle Coordination \rangle$")
+
+    return fig
+
+def av_r(time, av):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, av, 'o', ms=1)
+
+    ax.set_xlabel("t [fs]")
+    ax.set_ylabel(r"$\langle Gyration \rangle$")
+
+    return fig
+
+def delta_c(time, av):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, av, 'o', ms=1)
+
+    ax.set_xlabel("t [fs]")
+    ax.set_ylabel(r"$\Delta Gyration$")
+
+    return fig
+
+def delta_r(time, av):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, av, 'o', ms=1)
+
+    ax.set_xlabel("t [fs]")
+    ax.set_ylabel(r"$\Delta Gyration$")
+
+    return fig
