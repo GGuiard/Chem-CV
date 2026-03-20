@@ -20,25 +20,21 @@ import figures
 
 # Simulation parameters
 T = 700 # K
-L = 16 # A
 kT = units.kB*T
 timestep = 0.5 # fs
 taut = 100 # fs
 total_time = 1000 # fs
-nb_steps = total_time//timestep
+nb_steps = int(total_time//timestep)
 
 # Setup system
 atoms = read("init.xyz")
-atoms.set_cell([L, L, L])
-atoms.set_pbc(True)
-atoms.center()
 nb_atoms = len(atoms)
 
 # Setup MACE calculator
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
 
 # Setup PLUMED OPES
-input = open("plumed-unbiased.dat", "r").read().splitlines()
+input = open("plumed-unbiased.dat", "r").read().splitlines() # NLIST NL_CUTOFF=5, NL_STRIDE=100
 plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
 atoms.calc = plumed_calc
 
@@ -48,7 +44,7 @@ dyn = Bussi(atoms, timestep*units.fs, T, taut*units.fs)
 
 # Extract useful quantities
 interval=50
-Epot, Ekin = np.empty(nb_steps//interval+1, dtype=np.float64), np.empty(nb_steps//interval+1, dtype=np.float64)
+Epot, Ekin = np.empty(int(nb_steps//interval)+1, dtype=np.float64), np.empty(int(nb_steps//interval)+1, dtype=np.float64)
 i = 0
 def print_status(a=atoms):
     global i # to change

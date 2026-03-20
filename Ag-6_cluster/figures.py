@@ -136,7 +136,7 @@ def delta_c(time, av):
     ax.plot(time, av, 'o', ms=1)
 
     ax.set_xlabel("t [fs]")
-    ax.set_ylabel(r"$\Delta Gyration$")
+    ax.set_ylabel(r"$\Delta Coordination$")
 
     return fig
 

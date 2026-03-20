@@ -47,23 +47,23 @@ def trj_c(time, c, transient=0):
 
     return fig
 
-def trj_d(time, r, transient=0):
+def trj_d(time, d, transient=0):
     fig, ax = plt.subplots(layout='tight')
     if transient!=0:
         ax.axvspan(0, time[transient], color='grey', alpha=0.3)
-    ax.plot(time, r, 'o', ms=1)
+    ax.plot(time, d, 'o', ms=1)
 
     ax.set_xlabel("t [fs]")
-    ax.set_ylabel("Gyration")
+    ax.set_ylabel(r"$d_{N-N}\ [A]$")
 
     return fig
 
-def trj_2D(c, r): # add color with time or make animation
+def trj_2D(c, d): # add color with time or make animation
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(c, r, 'o', ms=1)
+    ax.plot(c, d, 'o', ms=1)
 
     ax.set_xlabel("Coordination")
-    ax.set_ylabel("Gyration")
+    ax.set_ylabel(r"$d_{N-N}\ [A]$")
 
     return fig
 
@@ -77,36 +77,36 @@ def fes_c(grid, fes, err): # add pop and err
     
     return fig
 
-def fes_r(grid, fes, err): # add pop and err
+def fes_d(grid, fes, err): # add pop and err
     fig, ax = plt.subplots(layout='tight')
     ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
     ax.plot(grid, fes)
 
-    ax.set_xlabel("Gyration")
+    ax.set_xlabel(r"$d_{N-N}\ [A]$")
     ax.set_ylabel("FES [eV]")
     
     return fig
 
-def fes_2D(grid_c, grid_r, fes):
+def fes_2D(grid_c, grid_d, fes):
     fig, ax = plt.subplots(layout='tight')
-    im = ax.contourf(grid_c, grid_r, fes.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
-    ax.contour(grid_c, grid_r, fes.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+    im = ax.contourf(grid_c, grid_d, fes.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
+    ax.contour(grid_c, grid_d, fes.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
 
     ax.set_xlabel("Coordination")
-    ax.set_ylabel("Gyration")
+    ax.set_ylabel(r"$d_{N-N}\ [A]$")
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="FES [eV]")
 
     return fig
 
-def err_fes_2D(grid_c, grid_r, err):
+def err_fes_2D(grid_c, grid_d, err):
     fig, ax = plt.subplots(layout='tight')
-    im = ax.contourf(grid_c, grid_r, err.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
-    ax.contour(grid_c, grid_r, err.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+    im = ax.contourf(grid_c, grid_d, err.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
+    ax.contour(grid_c, grid_d, err.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
 
     ax.set_xlabel("Coordination")
-    ax.set_ylabel("Gyration")
+    ax.set_ylabel(r"$d_{N-N} [A]$")
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="Err(FES) [eV]")
@@ -122,12 +122,12 @@ def av_c(time, av):
 
     return fig
 
-def av_r(time, av):
+def av_d(time, av):
     fig, ax = plt.subplots(layout='tight')
     ax.plot(time, av, 'o', ms=1)
 
     ax.set_xlabel("t [fs]")
-    ax.set_ylabel(r"$\langle Gyration \rangle$")
+    ax.set_ylabel(r"$\langle d_{N-N} \rangle\ [A]$")
 
     return fig
 
@@ -136,15 +136,15 @@ def delta_c(time, av):
     ax.plot(time, av, 'o', ms=1)
 
     ax.set_xlabel("t [fs]")
-    ax.set_ylabel(r"$\Delta Gyration$")
+    ax.set_ylabel(r"$\Delta Coordination$")
 
     return fig
 
-def delta_r(time, av):
+def delta_d(time, av):
     fig, ax = plt.subplots(layout='tight')
     ax.plot(time, av, 'o', ms=1)
 
     ax.set_xlabel("t [fs]")
-    ax.set_ylabel(r"$\Delta Gyration$")
+    ax.set_ylabel(r"$\Delta d_{N-N}\ [A]$")
 
     return fig
