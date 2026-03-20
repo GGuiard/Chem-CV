@@ -1,0 +1,35 @@
+UNITS LENGTH=A ENERGY=eV
+
+# N atoms
+n1: GROUP ATOMS=193
+n2: GROUP ATOMS=194
+# N2 center of mass 
+com_n2: COM ATOMS=n1,n2
+# N2 dist
+d_n2: DISTANCE ATOMS=n1,n2
+# Bottom surface COM
+com_surf: COM ATOMS=1-16
+# Dist from surf
+d_n2_surf: DISTANCE ATOMS=com_surf,com_n2 COMPONENTS NOPBC 
+
+# Coordination
+coord: COORDINATION GROUPA=193,194 GROUPB=1-192 R_0=2.5
+
+# Define upper walls 
+dwall: UPPER_WALLS ARG=d_n2 AT=2. KAPPA=0.2 EXP=2 EPS=0.1          # (distance N-N)
+
+# CHARGE CV
+qN2: EXTRACV NAME=CHARGECV 
+qtot: EXTRACV NAME=TOTALCHARGE 
+
+# BIAS
+bias: OPES_METAD_EXPLORE ...
+    ARG=d_n2,coord
+    PACE=100 
+    BARRIER=1.0
+    TEMP=700 
+...
+
+# Print
+PRINT ARG=* STRIDE=100 FILE=COLVAR 
+FLUSH STRIDE=100
