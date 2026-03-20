@@ -15,7 +15,7 @@ import subprocess
 os.chdir("N2-Fe")
 subprocess.run("rm -f input.xyz opt.traj", shell=True)
 
-l_Ncenter, d_N2, h_NFe, z_Fe = 1, 1.24, 1.15, 3  # 6.36442484
+l_Ncenter, d_N2, h_NFe, z_Fe = 1, 1.24, 1.15, 3
 
 slab = bcc111('Fe', size=(3,3,8))
 

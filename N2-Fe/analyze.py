@@ -1,12 +1,6 @@
 import numpy as np
 from ase import units
 
-# TODO:
-#   - make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
-#   - for bootstrap and block add the possibility to choose specify a function to apply to the data
-#   - be initialized with temp
-#   - generalize bootstrap block and pop to N dim
-
 def Emec(Epot, Ekin):
     Emec = Epot + Ekin
     av, std = np.average(Emec), np.std(Emec)
