@@ -1,16 +1,5 @@
 import numpy as np
 from scipy import stats
-from ase import units
-
-def Emec(Epot, Ekin):
-    Emec = Epot + Ekin
-    av, std = np.average(Emec), np.std(Emec)
-    return Emec, av, std
-
-def T(Ekin, nb_atoms):
-    T = Ekin/(1.5*nb_atoms*units.kB)
-    av, std = np.average(T), np.std(T)
-    return T, av, std
 
 def logw_to_w(logw, kT):
     return np.exp(logw/kT)

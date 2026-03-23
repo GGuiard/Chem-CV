@@ -29,7 +29,7 @@ traj = read("traj_comp.traj", ":")
 av_d, delta_d = analyze.cum_average(d, weights, use_weights)
 av_c, delta_c = analyze.cum_average(c, weights, use_weights)
 
-bins_d, bins_c = np.linspace(np.min(d), np.max(d), 100), np.linspace(np.min(c), np.max(c), 100)
+bins_d, bins_c = np.linspace(np.min(d), 2, 100), np.linspace(np.min(c), np.max(c), 100)
 grid_d, grid_c = analyze.bin_to_grid(bins_d), analyze.bin_to_grid(bins_c)
 
 pop_d = analyze.population(d, bins_d, weights, use_weights)

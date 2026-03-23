@@ -1,5 +1,8 @@
 COLVAR
 KERNELS
+STATES
+HILLS
+bck.*
 chemiscope.json.gz
 *.traj
 __pycache__

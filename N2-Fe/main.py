@@ -1,7 +1,6 @@
-from ase.calculators.plumed import Plumed
+from ase.calculators.plumed import Plumed, restart_from_trajectory
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 from ase.md.bussi import Bussi
-from ase.constraints import FixAtoms
 from ase.io import read, Trajectory
 from ase import units
 
@@ -15,9 +14,7 @@ import subprocess
 from rich.progress import Progress
 
 os.chdir("N2-Fe")
-subprocess.run("rm -f bck.* COLVAR KERNELS STATE HILLS", shell=True)
 
-import analyze
 import figures
 
 # Simulation parameters
@@ -25,33 +22,42 @@ T = 700 # K
 kT = units.kB*T
 timestep = 0.5 # fs
 taut = 100 # fs
-total_time = 50000 # fs
+total_time = 500000 # fs
 nb_steps = int(total_time//timestep)
-interval_info = 1000
+interval_info = 10000
 interval_traj = 100 # must be a multiple of the plumed stride
+restart, prev_steps = False, 1000000
+
+# Clean
+if not restart:
+    subprocess.run("rm -f bck.* *.traj COLVAR KERNELS STATE HILLS", shell=True)
 
 # Setup system
 atoms = read("init.xyz")
-nb_atoms = len(atoms)
 
 # Setup MACE calculator
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
 
 # Setup PLUMED OPES
-input = open("plumed-opes.dat", "r").read().splitlines() # NLIST NL_CUTOFF=5, NL_STRIDE=100
-plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
+input = open("plumed-opes.dat", "r").read().splitlines()
+if restart:
+    plumed_calc = restart_from_trajectory(prev_traj="traj_comp.traj", prev_steps=prev_steps, calc=calc, input=input, timestep=timestep*units.fs, atoms=atoms, kT=kT)
+else:
+    plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
 atoms.calc = plumed_calc
+
 
 # Setup Bussi propagator
 MaxwellBoltzmannDistribution(atoms, temperature_K=T)
 dyn = Bussi(atoms, timestep*units.fs, T, taut*units.fs)
 
 # Extract useful quantities
-Epot, Ekin = np.empty(int(nb_steps//interval_info)+1, dtype=np.float64), np.empty(int(nb_steps//interval_info)+1, dtype=np.float64)
+Emec, Temp = np.empty(int(nb_steps//interval_info)+1, dtype=np.float64), np.empty(int(nb_steps//interval_info)+1, dtype=np.float64)
 i = 0
 def print_status(a=atoms):
     global i # to change
-    Epot[i], Ekin[i] = a.get_potential_energy()[0], a.get_kinetic_energy()
+    Emec[i] = a.get_potential_energy()[0] + a.get_kinetic_energy()
+    Temp[i] = a.get_temperature()
     i += 1
 dyn.attach(print_status, interval_info)
 
@@ -72,9 +78,9 @@ dyn.run(nb_steps)
 progress.stop()
 
 # Analyze
-Emec, av_Emec, std_Emec = analyze.Emec(Epot, Ekin)
-Temp, av_Temp, std_Temp = analyze.T(Ekin, nb_atoms)
+av_Emec, std_Emec = np.average(Emec), np.std(Emec)
+av_Temp, std_Temp = np.average(Temp), np.std(Temp)
 
-figures.trj_E(Epot, Emec, av_Emec, std_Emec)
+figures.trj_E(Emec, av_Emec, std_Emec)
 figures.trj_T(Temp, av_Temp, std_Temp)
 plt.show()

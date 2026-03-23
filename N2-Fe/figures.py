@@ -3,16 +3,14 @@ from matplotlib import colormaps
 import numpy as np
 from chemiscope import write_input
 
-def trj_E(Epot, Emec, av, std):
+def trj_E(Emec, av, std):
     fig, ax = plt.subplots(layout='tight')
     ax.axhspan(av-std, av+std, color='grey', alpha=0.3)
-    ax.plot(Epot, label=r"$E_P$")
-    ax.plot(Emec, label=r"$E_M$")
+    ax.plot(Emec)
     ax.axhline(av, color='k', linestyle='--')
 
     ax.set_xlabel("number of frame")
     ax.set_ylabel("E [eV]")
-    ax.legend()
 
     return fig
 
