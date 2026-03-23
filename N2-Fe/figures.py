@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
-# import cmocean.cm as cmo
 import numpy as np
 from chemiscope import write_input
 
@@ -99,8 +98,8 @@ def fes_c(grid, fes, err): # add pop and err
 
 def fes_2D(grid_d, grid_c, fes):
     fig, ax = plt.subplots(layout='tight')
-    im = ax.contourf(grid_d, grid_c, fes.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
-    ax.contour(grid_d, grid_c, fes.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+    im = ax.contourf(grid_d, grid_c, fes.T, np.linspace(0, 1, 11), cmap=colormaps['Blues_r'])
+    ax.contour(grid_d, grid_c, fes.T, np.linspace(0, 1, 11), linestyles='-', colors='darkgray', linewidths=1.2)
 
     ax.set_xlabel(r"$d_{N-N}\ [A]$")
     ax.set_ylabel("Coordination")
@@ -112,8 +111,8 @@ def fes_2D(grid_d, grid_c, fes):
 
 def err_fes_2D(grid_d, grid_c, err):
     fig, ax = plt.subplots(layout='tight')
-    im = ax.contourf(grid_d, grid_c, err.T, 10, cmap=colormaps['Blues_r']) # cmo.tempo_r)
-    ax.contour(grid_d, grid_c, err.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+    im = ax.contourf(grid_d, grid_c, err.T, np.linspace(0, 0.02, 11), cmap=colormaps['Blues_r'])
+    ax.contour(grid_d, grid_c, err.T, np.linspace(0, 0.02, 11), linestyles='-', colors='darkgray', linewidths=1.2)
 
     ax.set_xlabel(r"$d_{N-N} [A]$")
     ax.set_ylabel("Coordination")

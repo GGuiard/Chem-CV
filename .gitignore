@@ -1,0 +1,5 @@
+COLVAR
+KERNELS
+chemiscope.json.gz
+*.traj
+__pycache__

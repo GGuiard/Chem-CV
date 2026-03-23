@@ -29,7 +29,7 @@ traj = read("traj_comp.traj", ":")
 av_d, delta_d = analyze.cum_average(d, weights, use_weights)
 av_c, delta_c = analyze.cum_average(c, weights, use_weights)
 
-bins_d, bins_c = np.linspace(np.min(d), np.max(d), 10), np.linspace(np.min(c), np.max(c), 10)
+bins_d, bins_c = np.linspace(np.min(d), np.max(d), 100), np.linspace(np.min(c), np.max(c), 100)
 grid_d, grid_c = analyze.bin_to_grid(bins_d), analyze.bin_to_grid(bins_c)
 
 pop_d = analyze.population(d, bins_d, weights, use_weights)
@@ -49,23 +49,23 @@ _, err_fes_2D, _ = analyze.error_fes(pop_list_2D, kT)
 
 ### Figures ###
 
-# figures.av_d(time, av_d)
-# figures.av_c(time, av_c)
-# figures.delta_d(time, delta_d)
-# figures.delta_c(time, delta_c)
+figures.av_d(time, av_d)
+figures.av_c(time, av_c)
+figures.delta_d(time, delta_d)
+figures.delta_c(time, delta_c)
 
-# figures.trj_d(time, d)
-# figures.trj_c(time, c)
-# figures.trj_2D(d, c)
+figures.trj_d(time, d)
+figures.trj_c(time, c)
+figures.trj_2D(d, c)
 
-# figures.trj_z(time, z)
-# figures.trj_xy(x, y)
+figures.trj_z(time, z)
+figures.trj_xy(x, y)
 
-# figures.fes_d(grid_d, fes_d, err_fes_d)
-# figures.fes_c(grid_c, fes_c, err_fes_c)
+figures.fes_d(grid_d, fes_d, err_fes_d)
+figures.fes_c(grid_c, fes_c, err_fes_c)
 figures.fes_2D(grid_d, grid_c, fes_2D)
-# figures.err_fes_2D(grid_d, grid_c, err_fes_2D)
+figures.err_fes_2D(grid_d, grid_c, err_fes_2D)
 
 plt.show()
 
-# figures.chemiscope(traj, time, d, c)
+figures.chemiscope(traj, time, d, c)

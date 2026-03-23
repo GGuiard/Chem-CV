@@ -20,6 +20,7 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### analyze.py
 
+- [ ] Better implement kde pop while keeping the possibility to use normal pop
 - [ ] Make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
 - [ ] For bootstrap and block add the possibility to choose specify a function to apply to the data
 - [ ] Initialize the scrip with the temperature
@@ -31,8 +32,6 @@ Overall the code need more comments, at least for the functions, with specified 
 - [ ] Setup save options, location, name, dpi, transparent...
 - [ ] Make animations or add color to 2D trj plots
 - [ ] Make plots to show where the bias is added and what it looks like
-- [ ] Try scipy interpolation for the 2D fes
-- [ ] Change cmap
 - [ ] Make multiple plots with all the trj, all the fes
 - [ ] Adapt the plots to the system studied by adding a label input
 - [ ] Set aspect ratio 1:1 when relevant

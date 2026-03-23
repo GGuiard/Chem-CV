@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 from ase import units
 
 def Emec(Epot, Ekin):
@@ -15,7 +16,9 @@ def logw_to_w(logw, kT):
     return np.exp(logw/kT)
 
 def fes(pop, kT):
-    return -kT*np.ma.log(pop)
+    fes = -kT*np.ma.log(pop)
+    fes -= np.min(fes)
+    return fes
 
 def bin_to_grid(bins):
     return (bins[1:]+bins[:-1])/2
@@ -31,18 +34,39 @@ def cum_average(data, weights=None, use_weights=False):
         std = av2-av**2
     return av, std
 
-def population(data, bins, weights=None, use_weights=False): 
+# def population(data, bins, weights=None, use_weights=False):
+#     if use_weights:
+#         pop = np.histogram(data, bins, density=True, weights=weights)[0] # test if weights=None is okay
+#     else:
+#         pop = np.histogram(data, bins, density=True)[0]
+#     return pop
+
+# def population_2d(data1, data2, bins, weights=None, use_weights=False):
+#     if use_weights:
+#         pop = np.histogram2d(data1, data2, bins, density=True, weights=weights)[0] # test if weights=None is okay
+#     else:
+#         pop = np.histogram2d(data1, data2, bins, density=True)[0]
+#     return pop
+
+def population(data, bins, weights=None, use_weights=False):
+    bins = bin_to_grid(bins)
     if use_weights:
-        pop = np.histogram(data, bins, density=True, weights=weights)[0] # test if weights=None is okay
+        kernel = stats.gaussian_kde(data, weights=weights)
+        pop = kernel(bins)
     else:
-        pop = np.histogram(data, bins, density=True)[0]
+        kernel = stats.gaussian_kde(data)
+        pop = kernel(bins)
     return pop
 
-def population_2d(data1, data2, bins, weights=None, use_weights=False): 
+def population_2d(data1, data2, bins, weights=None, use_weights=False):
+    bins = (bin_to_grid(bins[0]), bin_to_grid(bins[1]))
+    positions = np.array(np.meshgrid(bins[0], bins[1])).T.reshape(-1,2)
+    values = np.vstack([data1, data2])
     if use_weights:
-        pop = np.histogram2d(data1, data2, bins, density=True, weights=weights)[0] # test if weights=None is okay
+        kernel = stats.gaussian_kde(values, weights=weights)
     else:
-        pop = np.histogram2d(data1, data2, bins, density=True)[0]
+        kernel = stats.gaussian_kde(values)
+    pop = kernel(positions.T).reshape(len(bins[0]), len(bins[1]))
     return pop
 
 def bootstrap(data, nb_bootstraps, weights=None, use_weights=False):

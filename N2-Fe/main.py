@@ -27,8 +27,8 @@ timestep = 0.5 # fs
 taut = 100 # fs
 total_time = 50000 # fs
 nb_steps = int(total_time//timestep)
-interval_info = 100
-interval_traj = 10 # must be a multiple of the plumed stride
+interval_info = 1000
+interval_traj = 100 # must be a multiple of the plumed stride
 
 # Setup system
 atoms = read("init.xyz")
@@ -38,7 +38,7 @@ nb_atoms = len(atoms)
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
 
 # Setup PLUMED OPES
-input = open("plumed-metadynamics.dat", "r").read().splitlines() # NLIST NL_CUTOFF=5, NL_STRIDE=100
+input = open("plumed-opes.dat", "r").read().splitlines() # NLIST NL_CUTOFF=5, NL_STRIDE=100
 plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
 atoms.calc = plumed_calc
 
