@@ -35,4 +35,6 @@ dyn.run(fmax=0.05)
 
 view(slab)
 
-write('input.xyz', slab)
+write('init.xyz', slab)
+
+# Add depth of the cell by hand in init.xyz

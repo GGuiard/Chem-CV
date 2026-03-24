@@ -6,3 +6,6 @@ bck.*
 chemiscope.json.gz
 *.traj
 __pycache__
+comments.dat
+mace/
+mace-Fe111-charges.model

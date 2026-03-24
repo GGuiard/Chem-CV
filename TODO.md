@@ -36,3 +36,7 @@ Overall the code need more comments, at least for the functions, with specified 
 - [ ] Adapt the plots to the system studied by adding a label input
 - [ ] Set aspect ratio 1:1 when relevant
 - [ ] Give the possibility to not show err in 1D fes plots
+
+### init_system.py
+
+- [ ] Find a way to add depth to the cell as wanted
