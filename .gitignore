@@ -2,6 +2,7 @@ COLVAR
 KERNELS
 STATES
 HILLS
+CHARGES
 bck.*
 chemiscope.json.gz
 *.traj

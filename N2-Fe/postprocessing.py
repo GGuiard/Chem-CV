@@ -16,13 +16,18 @@ kT = units.kB*T
 
 ### Import data ###
 
-time, d, c, x, y, z, logweights = plumed.read_as_pandas("COLVAR").to_numpy().T
+time, d, c, x, y, z, logweights, rct, zed, neff, nker = plumed.read_as_pandas("COLVAR").to_numpy().T
 weights, use_weights = analyze.logw_to_w(logweights, kT), True
+
+# time, d, c, x, y, z, logweights = plumed.read_as_pandas("COLVAR").to_numpy().T
+# weights, use_weights = analyze.logw_to_w(logweights, kT), True
 
 # time, d, c, x, y, z = plumed.read_as_pandas("COLVAR").to_numpy().T
 # weights, use_weights = None, False
 
 traj = read("traj_comp.traj", ":")
+
+q = np.loadtxt("CHARGES")
 
 ### Postprocessing ###
 
@@ -69,3 +74,5 @@ figures.err_fes_2D(grid_d, grid_c, err_fes_2D)
 plt.show()
 
 figures.chemiscope(traj, time, d, c)
+
+figures.chemiscope_charges(traj, d, c, q)

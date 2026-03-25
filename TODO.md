@@ -16,7 +16,8 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### postprocessing.py
 
-- [ ] Give the possibility to save the figures into another named folder
+- [ ] Give the possibility to save the figures into another named folder with premade names
+- [ ] add progress bar(s)
 
 ### analyze.py
 
@@ -40,3 +41,8 @@ Overall the code need more comments, at least for the functions, with specified 
 ### init_system.py
 
 - [ ] Find a way to add depth to the cell as wanted
+
+### charge.py
+
+- [ ] See if it is possible to apply the mace calculator to the whole traj
+- [ ] See if it is possible to get charges for multiples atoms, with GPU parallelization

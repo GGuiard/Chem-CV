@@ -22,9 +22,9 @@ T = 700 # K
 kT = units.kB*T
 timestep = 0.5 # fs
 taut = 100 # fs
-total_time = 1000000 # fs
+total_time = 50 # fs
 nb_steps = int(total_time//timestep)
-interval_info = 10000
+interval_info = 10
 interval_traj = 1 # must be a multiple of the plumed stride
 restart, prev_steps = False, 1000000
 
@@ -39,13 +39,12 @@ atoms = read("init.xyz")
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
 
 # Setup PLUMED OPES
-input = open("plumed-opes.dat", "r").read().splitlines()
+input = open("plumed-unbiased.dat", "r").read().splitlines()
 if restart:
     plumed_calc = restart_from_trajectory(prev_traj="traj_comp.traj", prev_steps=prev_steps, calc=calc, input=input, timestep=timestep*units.fs, atoms=atoms, kT=kT)
 else:
     plumed_calc = Plumed(calc, input, timestep*units.fs, atoms, kT)
 atoms.calc = plumed_calc
-
 
 # Setup Bussi propagator
 MaxwellBoltzmannDistribution(atoms, temperature_K=T)

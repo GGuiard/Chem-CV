@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
-from chemiscope import write_input
+from chemiscope import write_input, all_atomic_environments
 
 def trj_E(Emec, av, std):
     fig, ax = plt.subplots(layout='tight')
@@ -156,16 +156,52 @@ def delta_c(time, av):
 
     return fig
 
-def chemiscope(traj, time, d, c):
-    stride = len(time)//len(traj)+1
+def chemiscope(structures, time, d, c):
     properties = {"d": {"target": "structure",
-                        "values": d[::stride],
+                        "values": d,
                         "description": "Distance between the two atoms of nitrogen"},
                   "c": {"target": "structure",
-                        "values": c[::stride],
+                        "values": c,
                         "description": "Coordination between the atoms of nitrogen and the atoms of iron"},
                   "time": {"target": "structure",
-                           "values": time[::stride],
+                           "values": time,
                            "description": "time [ps]"}}
     
-    write_input("chemiscope.json.gz", structures=traj, properties=properties)
+    settings = {"target": "structure",
+                "map": {"x": {"property": "d"},
+                        "y": {"property": "c"},
+                        "color": {"property": "time"}},
+                "structure": [{"bonds": False,
+                               "spaceFilling": True,
+                               "keepOrientation": True,
+                               "playbackDelay": 50}]}
+    
+    write_input("chemiscope.json.gz", structures=structures, properties=properties, settings=settings)
+
+def chemiscope_charges(structures, d, c, q):
+    properties = {"d": {"target": "structure",
+                        "values": d,
+                        "description": "Distance between the two atoms of nitrogen"},
+                  "c": {"target": "structure",
+                        "values": c,
+                        "description": "Coordination between the atoms of nitrogen and the atoms of iron"},
+                  "q": {"target": "structure",
+                        "values": q,
+                        "description": "charge [e]"},
+                  "charge": {"target": "atom",
+                        "values": q.ravel(),
+                        "description": "charge [e]"}}
+
+    settings = {"target": "structure",
+                "map": {"x": {"property": "d"},
+                        "y": {"property": "c"},
+                        "color": {"property": "q[74]"}},
+                "structure": [{"bonds": False,
+                               "spaceFilling": True,
+                               "keepOrientation": True,
+                               "playbackDelay": 50,
+                               "color": {"property": "charge", "palette": "bwr"}}]}
+
+    environments = all_atomic_environments(structures)
+
+    write_input("chemiscope_charges.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
