@@ -95,13 +95,17 @@ save and exit with Ctrl+O, Enter, Ctrl+X
 source ~/.bashrc
 ````
 
-### Luig Bonati fork of MACE
+### Luigi Bonati fork of MACE
 
 ````
 conda activate md_env
 git clone https://github.com/luigibonati/mace.git
 pip install ./mace
 ````
+
+### Luigi Bonati model for charges
+
+Downloaded mace-Fe111-charges.model from the link he sent me
 
 ---
 

@@ -4,7 +4,7 @@ STATES
 HILLS
 CHARGES
 bck.*
-chemiscope.json.gz
+*.json.gz
 *.traj
 __pycache__
 comments.dat

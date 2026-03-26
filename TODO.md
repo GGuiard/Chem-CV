@@ -10,14 +10,15 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### main.py
 
-- [ ] Make the OPES_METAD_EXPLORE works
+- [X] Make the OPES_METAD_EXPLORE works
 - [ ] Save E and T somewhere accessible for the postprocessing script
 - [ ] Give the possibility to save the COLVAR and traj fills into another named folder
 
 ### postprocessing.py
 
 - [ ] Give the possibility to save the figures into another named folder with premade names
-- [ ] add progress bar(s)
+- [ ] Add progress bar(s)
+- [X] Either wrap positions in traj or change something in chemiscope
 
 ### analyze.py
 
@@ -29,11 +30,13 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### figures.py
 
+- [ ] Make plot with sampling superimposed on fes 2d (maybe with charge)
 - [ ] Add the population with its error to 1D fes plots
 - [ ] Setup save options, location, name, dpi, transparent...
 - [ ] Make animations or add color to 2D trj plots
 - [ ] Make plots to show where the bias is added and what it looks like
 - [ ] Make multiple plots with all the trj, all the fes
+- [X] Fix min and max of colorbar in charge plot
 - [ ] Adapt the plots to the system studied by adding a label input
 - [ ] Set aspect ratio 1:1 when relevant
 - [ ] Give the possibility to not show err in 1D fes plots
@@ -44,5 +47,5 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### charge.py
 
-- [ ] See if it is possible to apply the mace calculator to the whole traj
 - [ ] See if it is possible to get charges for multiples atoms, with GPU parallelization
+- [ ] Reduce memory surloading

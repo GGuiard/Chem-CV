@@ -1,5 +1,7 @@
 import numpy as np
 from scipy import stats
+from ase.io import Trajectory
+from rich.progress import Progress
 
 def logw_to_w(logw, kT):
     return np.exp(logw/kT)
@@ -129,3 +131,20 @@ def error_fes(pop_list, kT):
     fes_list = fes(pop_list, kT)
     av, std = np.average(fes_list, axis=0), np.std(fes_list, axis=0)
     return av, std, fes_list
+
+def wrap_trj(traj_old):
+    a = traj_old[0]
+    a.wrap()
+    traj_new = Trajectory('traj_comp.traj', 'w', a)
+
+    progress = Progress()
+    task = progress.add_task("Processing...", total=len(traj_old))
+    progress.start()
+    for atoms in traj_old:
+        a = atoms
+        a.wrap()
+        traj_new.write(a)
+        progress.update(task, advance=1)
+    progress.stop()
+    traj_new.close()
+    

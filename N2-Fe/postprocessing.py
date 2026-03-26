@@ -16,7 +16,7 @@ kT = units.kB*T
 
 ### Import data ###
 
-time, d, c, x, y, z, logweights, rct, zed, neff, nker = plumed.read_as_pandas("COLVAR").to_numpy().T
+time, d, c, x, y, z, logweights, rct, zed, neff, nker = plumed.read_as_pandas("COLVAR").to_numpy()[::10].T
 weights, use_weights = analyze.logw_to_w(logweights, kT), True
 
 # time, d, c, x, y, z, logweights = plumed.read_as_pandas("COLVAR").to_numpy().T
@@ -25,7 +25,7 @@ weights, use_weights = analyze.logw_to_w(logweights, kT), True
 # time, d, c, x, y, z = plumed.read_as_pandas("COLVAR").to_numpy().T
 # weights, use_weights = None, False
 
-traj = read("traj_comp.traj", ":")
+traj = read("traj_comp.traj", "::10")
 
 q = np.loadtxt("CHARGES")
 
@@ -52,7 +52,7 @@ fes_2D = analyze.fes(pop_2D, kT)
 _, _, pop_list_2D = analyze.bootstrap_pop_2d(d, c, (bins_d, bins_c), 10, weights, use_weights)
 _, err_fes_2D, _ = analyze.error_fes(pop_list_2D, kT)
 
-### Figures ###
+## Figures ###
 
 figures.av_d(time, av_d)
 figures.av_c(time, av_c)

@@ -186,7 +186,7 @@ def chemiscope_charges(structures, d, c, q):
                         "values": c,
                         "description": "Coordination between the atoms of nitrogen and the atoms of iron"},
                   "q": {"target": "structure",
-                        "values": q,
+                        "values": (q[:,72]+q[:,73])/2,
                         "description": "charge [e]"},
                   "charge": {"target": "atom",
                         "values": q.ravel(),
@@ -195,12 +195,13 @@ def chemiscope_charges(structures, d, c, q):
     settings = {"target": "structure",
                 "map": {"x": {"property": "d"},
                         "y": {"property": "c"},
-                        "color": {"property": "q[74]"}},
+                        "color": {"property": "q"}},
                 "structure": [{"bonds": False,
                                "spaceFilling": True,
                                "keepOrientation": True,
                                "playbackDelay": 50,
-                               "color": {"property": "charge", "palette": "bwr"}}]}
+                               "supercell": [3,3,1],
+                               "color": {"property": "charge", "palette": "bwr", "min":-1, "max":1}}]}
 
     environments = all_atomic_environments(structures)
 
