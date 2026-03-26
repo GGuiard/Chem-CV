@@ -27,6 +27,7 @@ pip install mace-torch
 pip install cuequivariance cuequivariance-torch
 pip install ase
 pip install rich chemiscope
+pip install mlcolvar
 ````
 
 ### PLUMED with OPES

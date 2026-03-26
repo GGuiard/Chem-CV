@@ -8,5 +8,6 @@ bck.*
 *.traj
 __pycache__
 comments.dat
+lightning_logs
 mace/
 mace-Fe111-charges.model

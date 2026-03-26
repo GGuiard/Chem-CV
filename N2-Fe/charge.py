@@ -8,7 +8,7 @@ os.chdir("N2-Fe")
 
 calc = MACECalculator('mace-Fe111-charges.model', model_type = 'EnergyChargesMACE')
 
-traj = read("traj_comp.traj", ":200001:10")
+traj = read("traj_comp.traj", ":")
 
 nb_traj = len(traj)
 nb_atoms = len(traj[0])
