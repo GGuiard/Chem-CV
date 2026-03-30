@@ -6,6 +6,7 @@ CHARGES
 bck.*
 *.json.gz
 *.traj
+*.ptc
 __pycache__
 comments.dat
 lightning_logs

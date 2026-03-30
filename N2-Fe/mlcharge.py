@@ -1,3 +1,4 @@
+import numpy as np
 from mlcolvar.data import DictDataset, DictModule
 from mlcolvar.cvs import RegressionCV
 from mlcolvar.utils.trainer import MetricsCallback
@@ -5,7 +6,6 @@ from mlcolvar.utils.plot import plot_metrics
 from torch import Tensor
 from lightning import Trainer
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
-import numpy as np
 import plumed
 from ase.io import read
 import matplotlib.pyplot as plt
@@ -15,8 +15,8 @@ os.chdir("N2-Fe")
 
 ### Import data ###
 
-traj = read("traj_comp.traj", ":")
-_, d, c, _, _, _ = plumed.read_as_pandas("COLVAR").to_numpy().T
+traj = read("traj_comp.traj", ":20001")
+_, d, c, _, _, _, _, _, _, _, _ = plumed.read_as_pandas("COLVAR").to_numpy()[:20001].T
 q = np.loadtxt("CHARGES")
 
 ### Create Dataset ###
