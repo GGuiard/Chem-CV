@@ -38,7 +38,7 @@ atoms = read("init.xyz")
 # Setup MACE calculator
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
 
-# Setup PLUMED OPES
+# Setup PLUMED
 input = open("plumed-opes-charge.dat", "r").read().splitlines()
 if restart:
     plumed_calc = restart_from_trajectory(prev_traj="traj_comp.traj", prev_steps=prev_steps, calc=calc, input=input, timestep=timestep*units.fs, atoms=atoms, kT=kT)

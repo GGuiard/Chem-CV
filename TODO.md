@@ -49,3 +49,7 @@ Overall the code need more comments, at least for the functions, with specified 
 
 - [ ] See if it is possible to get charges for multiples atoms, with GPU parallelization
 - [ ] Reduce memory surloading
+
+### mlcharge.py
+
+- [ ] Implement other descriptors as : LOCAL_CRISTALINITY, CONTACTMAP, KDE of DISTANCE

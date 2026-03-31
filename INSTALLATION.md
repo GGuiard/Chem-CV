@@ -23,9 +23,13 @@ Remove other conda environments with PLUMED and/or GROMACS.
 ````
 conda create -n md_env python=3.11
 conda activate md_env
-conda install -c conda-forge numpy pandas matplotlib scipy notebook mdtraj mdanalysis py-plumed cmake
+conda install -c conda-forge numpy pandas matplotlib scipy notebook cython pybind11
 pip install torch torchvision cuequivariance cuequivariance-torch ase mlcolvar chemiscope rich
 ````
+
+if needed install cmake with conda
+
+<!-- conda install py-plumed "numpy<2.0 ? -->
 
 ### Luigi Bonati fork of MACE
 
@@ -39,6 +43,8 @@ I downloaded mace-Fe111-charges.model from the link he sent me.
 ### Libtorch
 
 To know which version to download visit the website : https://pytorch.org/get-started/locally/
+
+<!-- cuda built on Sun_Jul_28_19:07 with version release 10.1, V10.1.243 but also find cuda-12.1 in /usr/local -->
 
 ````
 wget https://download.pytorch.org/libtorch/cu126/libtorch-shared-with-deps-2.11.0%2Bcu126.zip
@@ -71,24 +77,33 @@ source ~/.bashrc
 ### PLUMED with OPES and LIBTORCH
 
 ````
+conda activate md_env
 wget https://github.com/plumed/plumed2/releases/download/v2.10.0/plumed-2.10.0.tgz
 tar -xf plumed-2.10.0.tgz
 cd plumed-2.10.0
-./configure --prefix=$HOME/plumed-opes-libtorch --enable-libtorch --enable-modules=opes+pytorch
+./configure --prefix=$HOME/plumed-opes-libtorch-python PYTHON_BIN=$(which python) PYTHON_CONFIG=$(which python3-config) --enable-python --enable-libtorch --enable-modules=opes+pytorch --enable-modules=opes+pytorch
 make -j$(nproc)
 make install
 nano ~/.bashrc
 ````
 
+<!-- make distclean -->
+
+<!-- cd plumed-opes-libtorch-python/lib/plumed/python
+mkdir -p plumed
+mv plumed*.so plumed
+touch plumed/__init__.py -->
+
 add to the end of the file
 
 ````
 # >>> plumed initialize >>>
-export PATH=$HOME/plumed-opes-libtorch/bin:$PATH
-export C_INCLUDE_PATH=$HOME/plumed-opes-libtorch/include:$C_INCLUDE_PATH
-export LD_LIBRARY_PATH=$HOME/plumed-opes-libtorch/lib:$LD_LIBRARY_PATH
-export PKG_CONFIG_PATH=$HOME/plumed-opes-libtorch/lib/pkgconfig:$PKG_CONFIG_PATH
-export PLUMED_KERNEL=$HOME/plumed-opes-libtorch/lib/libplumedKernel.so
+export PATH=$HOME/plumed-opes-libtorch-python/bin:$PATH
+export C_INCLUDE_PATH=$HOME/plumed-opes-libtorch-python/include:$C_INCLUDE_PATH
+export LD_LIBRARY_PATH=$HOME/plumed-opes-libtorch-python/lib:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$HOME/plumed-opes-libtorch-python/lib/pkgconfig:$PKG_CONFIG_PATH
+export PLUMED_KERNEL=$HOME/plumed-opes-libtorch-python/lib/libplumedKernel.so
+export PYTHONPATH=$HOME/plumed-opes-libtorch-python/lib/plumed/python:$PYTHONPATH
 # <<< plumed initialize <<<
 ````
 
@@ -96,6 +111,13 @@ save and exit with Ctrl+O, Enter, Ctrl+X
 
 ````
 source ~/.bashrc
+````
+
+test python installation with
+
+````
+conda activate md_env
+python -c "import plumed; print(plumed.__version__)"
 ````
 
 ### GROMACS patched with PLUMED
@@ -142,7 +164,7 @@ check installation after restarting terminal
 
 ````
 which plumed
-plumed config module opesP
+plumed config module opes
 echo $PLUMED_KERNEL
 which gmx_mpi
 ````
@@ -150,3 +172,11 @@ which gmx_mpi
 ## Advises
 
 It is strongly advised to disable the autoinstalled extension "Python Environments" if your working on VS Code.
+
+<!-- plumed driver --plumed plumed-opes-charge.dat --ixyz init.xyz --box 12.176378772032349,0.0,0.0,6.088189386016174,10.545053342681582,0.0,0.0,0.0,20.0 -->
+
+<!-- A python plugin can be found here: /home/gguiard@iit.local/plumed-opes-libtorch-python/lib/plumed/python/
+To use PLUMED through python either : 
+- Add /home/gguiard@iit.local/plumed-opes-libtorch-python/lib/plumed/python/ to your PYTHONPATH
+- Execute the command python buildPythonInterface.py install in the plumed2/python directory
+Plumed can be loaded in a python script using the command import plumed -->
