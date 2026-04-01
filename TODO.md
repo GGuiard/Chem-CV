@@ -32,6 +32,7 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### figures.py
 
+- [ ] Adapt radius in chemiscope plots using CR from ASE (reference in DEAL repo of LB)
 - [ ] Add stride option to chemiscope plots
 - [ ] Make plot with sampling superimposed on fes 2d (maybe with charge)
 - [ ] Add the population with its error to 1D fes plots
