@@ -15,8 +15,8 @@ os.chdir("N2-Fe")
 
 ### Import data ###
 
-traj = read("traj_comp.traj", ":20001")
-_, d, c, _, _, _, _, _, _, _, _ = plumed.read_as_pandas("COLVAR").to_numpy()[:20001].T
+# traj = read("traj_comp.traj", ":200001:10")
+_, d, c, _, _, _, _, _, _, _, _ = plumed.read_as_pandas("COLVAR").to_numpy()[:200001:10].T
 q = np.loadtxt("CHARGES")
 
 ### Create Dataset ###
@@ -29,7 +29,7 @@ datamodule = DictModule(dataset, lengths=[0.8,0.2], batch_size=1024)
 
 ### Create Model ###
 
-layers = [X.shape[1],25,50,25,1]
+layers = [X.shape[1], 25, 50, 25, 1]
 nn_args = {'activation': 'relu'}
 norm_args = {}
 

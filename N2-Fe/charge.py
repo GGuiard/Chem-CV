@@ -6,7 +6,7 @@ from rich.progress import Progress
 
 os.chdir("N2-Fe")
 
-calc = MACECalculator('mace-Fe111-charges.model', model_type = 'EnergyChargesMACE')
+calc = MACECalculator('mace-Fe111-charges.model', model_type='EnergyChargesMACE')
 
 traj = read("traj_comp.traj", ":")
 

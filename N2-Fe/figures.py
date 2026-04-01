@@ -74,6 +74,17 @@ def trj_xy(x, y): # add color with time or make animation
 
     return fig
 
+def trj_q(time, q, transient=0):
+    fig, ax = plt.subplots(layout='tight')
+    if transient!=0:
+        ax.axvspan(0, time[transient], color='grey', alpha=0.3)
+    ax.plot(time, q, 'o', ms=1)
+
+    ax.set_xlabel("t [ps]")
+    ax.set_ylabel(r"$q_N\ [e]$")
+
+    return fig
+
 def fes_d(grid, fes, err): # add pop and err
     fig, ax = plt.subplots(layout='tight')
     ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
@@ -90,6 +101,16 @@ def fes_c(grid, fes, err): # add pop and err
     ax.plot(grid, fes)
 
     ax.set_xlabel("Coordination")
+    ax.set_ylabel("FES [eV]")
+    
+    return fig
+
+def fes_q(grid, fes, err): # add pop and err
+    fig, ax = plt.subplots(layout='tight')
+    ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
+    ax.plot(grid, fes)
+
+    ax.set_xlabel(r"$q_N\ [e]$")
     ax.set_ylabel("FES [eV]")
     
     return fig
@@ -138,6 +159,15 @@ def av_c(time, av):
 
     return fig
 
+def av_q(time, av):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, av, 'o', ms=1)
+
+    ax.set_xlabel("t [ps]")
+    ax.set_ylabel(r"$q_N\ [e]$")
+
+    return fig
+
 def delta_d(time, av):
     fig, ax = plt.subplots(layout='tight')
     ax.plot(time, av, 'o', ms=1)
@@ -153,6 +183,15 @@ def delta_c(time, av):
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$\Delta Coordination$")
+
+    return fig
+
+def delta_q(time, av):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, av, 'o', ms=1)
+
+    ax.set_xlabel("t [ps]")
+    ax.set_ylabel(r"$q_N\ [e]$")
 
     return fig
 
@@ -206,3 +245,44 @@ def chemiscope_charges(structures, d, c, q):
     environments = all_atomic_environments(structures)
 
     write_input("chemiscope_charges.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
+
+def chemiscope_charge(structures, d, c, q):
+    charge = np.outer(q, np.concatenate((-np.ones(72)/36, np.ones(2)))).ravel()
+
+    properties = {"d": {"target": "structure",
+                        "values": d,
+                        "description": "Distance between the two atoms of nitrogen"},
+                  "c": {"target": "structure",
+                        "values": c,
+                        "description": "Coordination between the atoms of nitrogen and the atoms of iron"},
+                  "q": {"target": "structure",
+                        "values": q,
+                        "description": "charge [e]"},
+                  "charge": {"target": "atom",
+                        "values": charge,
+                        "description": "charge [e]"}}
+
+    settings = {"target": "structure",
+                "map": {"x": {"property": "d"},
+                        "y": {"property": "c"},
+                        "color": {"property": "q"}},
+                "structure": [{"bonds": False,
+                               "spaceFilling": True,
+                               "keepOrientation": True,
+                               "playbackDelay": 50,
+                               "supercell": [3,3,1],
+                               "color": {"property": "charge", "palette": "bwr", "min":-1, "max":1}}]}
+
+    environments = all_atomic_environments(structures)
+
+    write_input("chemiscope_charges.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
+
+def pred(ref, pred):
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1], color='k', linestyle='--')
+    ax.plot(ref, pred, 'o', ms=1)
+    
+    ax.set_xlabel("Reference")
+    ax.set_ylabel("Prediction")
+
+    return fig

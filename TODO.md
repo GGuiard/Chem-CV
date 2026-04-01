@@ -22,7 +22,9 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### analyze.py
 
+- [ ] Add a transient option for the relevant functions
 - [ ] Better implement kde pop while keeping the possibility to use normal pop
+- [ ] Correct cum_av with weight
 - [ ] Make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
 - [ ] For bootstrap and block add the possibility to choose specify a function to apply to the data
 - [ ] Initialize the scrip with the temperature
@@ -30,6 +32,7 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### figures.py
 
+- [ ] Add stride option to chemiscope plots
 - [ ] Make plot with sampling superimposed on fes 2d (maybe with charge)
 - [ ] Add the population with its error to 1D fes plots
 - [ ] Setup save options, location, name, dpi, transparent...

@@ -7,8 +7,6 @@ from ase.visualize import view
 
 from mace.calculators import mace_mp
 
-import numpy as np
-
 import os
 import subprocess
 

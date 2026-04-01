@@ -22,9 +22,9 @@ T = 700 # K
 kT = units.kB*T
 timestep = 0.5 # fs
 taut = 100 # fs
-total_time = 50 # fs
+total_time = 10000 # fs
 nb_steps = int(total_time//timestep)
-interval_info = 10
+interval_info = int(nb_steps//100)
 interval_traj = 1 # must be a multiple of the plumed stride
 restart, prev_steps = False, 1000000
 
