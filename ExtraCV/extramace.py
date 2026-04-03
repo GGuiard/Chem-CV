@@ -6,7 +6,11 @@ class MyCalculator(MACECalculator):
         super().__init__(**kwargs)
         if "extracv" in kwargs:
             self.extracv = kwargs["extracv"]
-         
+            
     def calculate(self, atoms=None, properties=None, system_changes=all_changes):
         super().calculate(atoms, properties, system_changes)
-        self.results["cv"], self.results["cv_gradients"] = self.extracv(atoms)
+        if self.extracv is not None:
+            extra_cv, extra_cv_gradients = {}, {}
+            for name, model in self.extracv.items():
+                extra_cv[name], extra_cv_gradients[name] = model(atoms)
+            self.results["cv"], self.results["cv_gradients"] = extra_cv, extra_cv_gradients

@@ -25,7 +25,7 @@ class extracv_torch:
         cv = self.model(s)
         grad_f = torch.autograd.grad(outputs=cv, inputs=s, grad_outputs=torch.ones_like(cv))[0].numpy()[0]
 
-        cv = cv.detach().numpy()[0]
+        cv = cv.detach().numpy()[0,0]
         grad_cv = np.tensordot(grad_f, grad_s, axes=1)
 
         return cv, grad_cv

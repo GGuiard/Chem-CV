@@ -23,16 +23,17 @@ total_time = 10 # fs
 nb_steps = int(total_time//timestep)
 
 # Clean
-subprocess.run("rm -f bck.* *.traj COLVAR", shell=True)
+subprocess.run("rm -f bck.* *.traj COLVAR KERNELS", shell=True)
 
 # Setup system
 atoms = read("init.xyz")
 atoms.set_constraint(FixedLine([0,1], [1,0,0]))
 
 # Setup MACE calculator
-extracv = extracv_torch("model.ptc")
+dfunc = extracv_function
+dtorch = extracv_torch("model.ptc")
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
-calc = MyCalculator(models=calc.models, head=calc.head, device=str(calc.device), extracv=extracv) # report issue in macecalculator that torch.device is not iterable
+calc = MyCalculator(models=calc.models, head=calc.head, device=str(calc.device), extracv={'dfunc': dfunc, 'dtorch': dtorch}) # report issue in macecalculator that torch.device is not iterable
 
 # Setup PLUMED
 input = open("plumed.dat", "r").read().splitlines()
