@@ -4,7 +4,9 @@ from ase.calculators.calculator import all_changes
 class MyCalculator(MACECalculator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if "extracv" in kwargs:
+            self.extracv = kwargs["extracv"]
          
-    def calculate(self, extracv, atoms=None, properties=None, system_changes=all_changes):
+    def calculate(self, atoms=None, properties=None, system_changes=all_changes):
         super().calculate(atoms, properties, system_changes)
-        self.results["cv"], self.results["cv_gradients"] = extracv(atoms)
+        self.results["cv"], self.results["cv_gradients"] = self.extracv(atoms)

@@ -6,6 +6,10 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ---
 
+### INSTALLATION.md
+
+- [ ] Change export PYTHONPATH in ~/.bashrc to a more secure option
+
 ## N2-Fe
 
 ### main.py
@@ -56,4 +60,5 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### mlcharge.py
 
+- [ ] Export model with torch.export.export
 - [ ] Implement other descriptors as : LOCAL_CRISTALINITY, CONTACTMAP, KDE of DISTANCE

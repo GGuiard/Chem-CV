@@ -9,6 +9,8 @@ from ase import units
 from ase.constraints import FixedLine
 
 from mace.calculators import mace_mp
+from extramace import MyCalculator
+from extramodel import extracv_function, extracv_torch
 
 import subprocess
 
@@ -28,7 +30,9 @@ atoms = read("init.xyz")
 atoms.set_constraint(FixedLine([0,1], [1,0,0]))
 
 # Setup MACE calculator
+extracv = extracv_torch("model.ptc")
 calc = mace_mp(model='mh-0', head='oc20_usemppbe')
+calc = MyCalculator(models=calc.models, head=calc.head, device=str(calc.device), extracv=extracv) # report issue in macecalculator that torch.device is not iterable
 
 # Setup PLUMED
 input = open("plumed.dat", "r").read().splitlines()
