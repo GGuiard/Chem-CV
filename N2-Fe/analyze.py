@@ -1,7 +1,7 @@
 import numpy as np
-from scipy import stats
 from ase.io import Trajectory
 from rich.progress import Progress
+from scipy.ndimage import gaussian_filter
 
 def logw_to_w(logw, kT):
     return np.exp(logw/kT)
@@ -16,7 +16,7 @@ def bin_to_grid(bins):
 
 def cum_average(data, weights=None, use_weights=False):
     if use_weights:
-        av, av2 = np.cumsum(data*weights)/np.cumsum(weights), np.cumsum(data**2)/np.cumsum(weights)
+        av, av2 = np.cumsum(data*weights)/np.cumsum(weights), np.cumsum(data**2*weights)/np.cumsum(weights)
         std = av2-av**2
     else:
         N = len(data)
@@ -25,42 +25,27 @@ def cum_average(data, weights=None, use_weights=False):
         std = av2-av**2
     return av, std
 
-def population(data, bins, weights=None, use_weights=False):
+def population(data, bins, sigma, weights=None, use_weights=False):
     if use_weights:
         pop = np.histogram(data, bins, density=True, weights=weights)[0] # test if weights=None is okay
     else:
         pop = np.histogram(data, bins, density=True)[0]
+    
+    pop = gaussian_filter(pop, sigma)
+    pop /= pop.sum()
+
     return pop
 
-def population_2d(data1, data2, bins, weights=None, use_weights=False):
+def population_2d(data1, data2, bins, sigma, weights=None, use_weights=False):
     if use_weights:
         pop = np.histogram2d(data1, data2, bins, density=True, weights=weights)[0] # test if weights=None is okay
     else:
         pop = np.histogram2d(data1, data2, bins, density=True)[0]
+    
+    pop = gaussian_filter(pop, sigma)
+    pop /= pop.sum()
+
     return pop
-
-### KDE not ready yet
-
-# def population(data, bins, weights=None, use_weights=False):
-#     bins = bin_to_grid(bins)
-#     if use_weights:
-#         kernel = stats.gaussian_kde(data, weights=weights)
-#         pop = kernel(bins)
-#     else:
-#         kernel = stats.gaussian_kde(data)
-#         pop = kernel(bins)
-#     return pop
-
-# def population_2d(data1, data2, bins, weights=None, use_weights=False):
-#     bins = (bin_to_grid(bins[0]), bin_to_grid(bins[1]))
-#     positions = np.array(np.meshgrid(bins[0], bins[1])).T.reshape(-1,2)
-#     values = np.vstack([data1, data2])
-#     if use_weights:
-#         kernel = stats.gaussian_kde(values, weights=weights)
-#     else:
-#         kernel = stats.gaussian_kde(values)
-#     pop = kernel(positions.T).reshape(len(bins[0]), len(bins[1]))
-#     return pop
 
 def bootstrap(data, nb_bootstraps, weights=None, use_weights=False):
     N = len(data)
@@ -75,29 +60,29 @@ def bootstrap(data, nb_bootstraps, weights=None, use_weights=False):
     av, std = np.average(data_bootstraps), np.std(data_bootstraps)
     return av, std, data_bootstraps
 
-def bootstrap_pop(data, bins, nb_bootstraps, weights=None, use_weights=False):
+def bootstrap_pop(data, bins, sigma, nb_bootstraps, weights=None, use_weights=False):
     N, nb_bins = len(data), len(bins)
     bootstrap_size = N//nb_bootstraps
     pop_bootstraps = np.empty((nb_bootstraps, nb_bins-1), dtype=np.float64)
     for i in range(nb_bootstraps):
         indexes = np.random.randint(0, N, bootstrap_size)
         if use_weights:
-            pop_bootstraps[i] = population(data[indexes], bins, weights[indexes], use_weights)
+            pop_bootstraps[i] = population(data[indexes], bins, sigma, weights[indexes], use_weights)
         else:
-            pop_bootstraps[i] = population(data[indexes], bins)
+            pop_bootstraps[i] = population(data[indexes], bins, sigma)
     av, std = np.average(pop_bootstraps, axis=0), np.std(pop_bootstraps, axis=0)
     return av, std, pop_bootstraps
 
-def bootstrap_pop_2d(data1, data2, bins, nb_bootstraps, weights=None, use_weights=False):
+def bootstrap_pop_2d(data1, data2, bins, sigma, nb_bootstraps, weights=None, use_weights=False):
     N, nb_bins1, nb_bins2 = len(data1), len(bins[0]), len(bins[1])
     bootstrap_size = N//nb_bootstraps
     pop_bootstraps = np.empty((nb_bootstraps, nb_bins1-1, nb_bins2-1), dtype=np.float64)
     for i in range(nb_bootstraps):
         indexes = np.random.randint(0, N, bootstrap_size)
         if use_weights:
-            pop_bootstraps[i] = population_2d(data1[indexes], data2[indexes], bins, weights[indexes], use_weights)
+            pop_bootstraps[i] = population_2d(data1[indexes], data2[indexes], bins, sigma, weights[indexes], use_weights)
         else:
-            pop_bootstraps[i] = population_2d(data1[indexes], data2[indexes], bins)
+            pop_bootstraps[i] = population_2d(data1[indexes], data2[indexes], bins, sigma)
     av, std = np.average(pop_bootstraps, axis=0), np.std(pop_bootstraps, axis=0)
     return av, std, pop_bootstraps
 
@@ -114,16 +99,16 @@ def block(data, nb_blocks, weights=None, use_weights=False):
     av, std = np.average(data_blocks), np.std(data_blocks)
     return av, std, data_blocks
 
-def block_pop(data, bins, nb_blocks, weights=None, use_weights=False):
+def block_pop(data, bins, nb_blocks, sigma, weights=None, use_weights=False):
     N, nb_bins = len(data), len(bins)
     block_size = N//nb_blocks
     pop_blocks = np.empty((nb_blocks, nb_bins-1), dtype=np.float64)
     for i in range(nb_blocks):
         indexes = np.arange(i*block_size, (i+1)*block_size)
         if use_weights:
-            pop_blocks[i] = population(data[indexes], bins, weights[indexes], use_weights)
+            pop_blocks[i] = population(data[indexes], bins, sigma, weights[indexes], use_weights)
         else:
-            pop_blocks[i] = population(data[indexes], bins)
+            pop_blocks[i] = population(data[indexes], bins, sigma)
     av, std = np.average(pop_blocks, axis=0), np.std(pop_blocks, axis=0)
     return av, std, pop_blocks
 

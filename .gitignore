@@ -3,6 +3,7 @@ KERNELS
 STATES
 HILLS
 CHARGES
+ENERGY
 bck.*
 *.json.gz
 *.traj

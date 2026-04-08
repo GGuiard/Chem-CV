@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
 from chemiscope import write_input, all_atomic_environments
+from ase.data import covalent_radii, chemical_symbols
 
 def trj_E(Emec, av, std):
     fig, ax = plt.subplots(layout='tight')
@@ -12,7 +13,8 @@ def trj_E(Emec, av, std):
     ax.set_xlabel("number of frame")
     ax.set_ylabel("E [eV]")
 
-    return fig
+    fig.savefig("trj_E.svg")
+    plt.close()
 
 def trj_T(T, av, std):
     fig, ax = plt.subplots(layout='tight')
@@ -23,97 +25,186 @@ def trj_T(T, av, std):
     ax.set_xlabel("number of frame")
     ax.set_ylabel("T [K]")
 
-    return fig
+    fig.savefig("trj_T.svg")
+    plt.close()
 
-def trj_d(time, d, transient=0):
+def trj_d(time, d):
     fig, ax = plt.subplots(layout='tight')
-    if transient!=0:
-        ax.axvspan(0, time[transient], color='grey', alpha=0.3)
-    ax.plot(time, d, 'o', ms=1)
+    ax.plot(time, d)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$d_{N-N}\ [A]$")
 
-    return fig
+    fig.savefig("trj_d.svg")
+    plt.close()
 
-def trj_c(time, c, transient=0):
+def trj_c(time, c):
     fig, ax = plt.subplots(layout='tight')
-    if transient!=0:
-        ax.axvspan(0, time[transient], color='grey', alpha=0.3)
-    ax.plot(time, c, 'o', ms=1)
+    ax.plot(time, c)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel("Coordination")
 
-    return fig
+    fig.savefig("trj_c.svg")
+    plt.close()
 
 def trj_z(time, z):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, z, 'o', ms=1)
+    ax.plot(time, z)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel("z [A]")
 
-    return fig
+    fig.savefig("trj_z.svg")
+    plt.close()
 
-def trj_2D(d, c): # add color with time or make animation
+def trj_2D(time, d, c):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(d, c, 'o', ms=1)
+    scatter = ax.scatter(d, c, s=1/100, c=time, cmap="magma")
 
     ax.set_xlabel(r"$d_{N-N}\ [A]$")
     ax.set_ylabel("Coordination")
 
-    return fig
+    cbar = fig.colorbar(scatter, ax=ax)
+    cbar.set_label(label="t [ps]")
 
-def trj_xy(x, y): # add color with time or make animation
+    fig.savefig("trj_2D.png", dpi=300)
+    plt.close()
+
+def trj_xy(time, x, y):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(x, y, 'o', ms=1)
+    scatter = ax.scatter(x, y, s=1/100, c=time, cmap="magma")
 
     ax.set_xlabel("x [A]")
     ax.set_ylabel("y [A]")
 
-    return fig
+    cbar = fig.colorbar(scatter, ax=ax)
+    cbar.set_label(label="t [ps]")
 
-def trj_q(time, q, transient=0):
+    fig.savefig("trj_xy.png", dpi=300)
+    plt.close()
+
+def trj_q(time, q):
     fig, ax = plt.subplots(layout='tight')
-    if transient!=0:
-        ax.axvspan(0, time[transient], color='grey', alpha=0.3)
-    ax.plot(time, q, 'o', ms=1)
+    ax.plot(time, q)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$q_N\ [e]$")
 
-    return fig
+    fig.savefig("trj_q.svg")
+    plt.close()
 
-def fes_d(grid, fes, err): # add pop and err
+def trj_rct(time, rct):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, rct)
+
+    ax.set_xlabel("t [ps]")
+    ax.set_ylabel("OPES rct")
+
+    fig.savefig("trj_rct.svg")
+    plt.close()
+
+def trj_zed(time, zed):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, zed)
+
+    ax.set_xlabel("t [ps]")
+    ax.set_ylabel("OPES zed")
+
+    fig.savefig("trj_zed.svg")
+    plt.close()
+
+def trj_n(time, neff, nker):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(time, neff, label=r"$n_{eff}$")
+    ax.plot(time, nker, label=r"$n_{ker}$")
+
+    ax.set_xlabel("t [ps]")
+    ax.set_ylabel("N")
+    ax.legend()
+
+    fig.savefig("trj_n.svg")
+    plt.close()
+
+def density_d(grid, density):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(grid, density)
+
+    ax.set_xlabel(r"$d_{N-N}\ [A]$")
+    ax.set_ylabel("Density")
+    
+    fig.savefig("density_d.svg")
+    plt.close()
+
+def density_c(grid, density):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(grid, density)
+
+    ax.set_xlabel("Coordination")
+    ax.set_ylabel("Density")
+    
+    fig.savefig("density_c.svg")
+    plt.close()
+
+def density_q(grid, density):
+    fig, ax = plt.subplots(layout='tight')
+    ax.plot(grid, density)
+
+    ax.set_xlabel(r"$q_N\ [e]$")
+    ax.set_ylabel("Density")
+    
+    fig.savefig("density_q.svg")
+    plt.close()
+
+def density_2D(grid_d, grid_c, density):
+    fig, ax = plt.subplots(layout='tight')
+    im = ax.contourf(grid_d, grid_c, density.T, 10, cmap=colormaps['Blues'])
+    ax.contour(grid_d, grid_c, density.T, 10, linestyles='-', colors='darkgray', linewidths=1.2)
+
+    ax.set_xlabel(r"$d_{N-N}\ [A]$")
+    ax.set_ylabel("Coordination")
+
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label(label="Density")
+
+    fig.savefig("density_2D.svg")
+    plt.close()
+
+def fes_d(grid, fes, err):
     fig, ax = plt.subplots(layout='tight')
     ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
     ax.plot(grid, fes)
 
     ax.set_xlabel(r"$d_{N-N}\ [A]$")
     ax.set_ylabel("FES [eV]")
+    ax.set_ylim(0, 1)
     
-    return fig
+    fig.savefig("fes_d.svg")
+    plt.close()
 
-def fes_c(grid, fes, err): # add pop and err
+def fes_c(grid, fes, err):
     fig, ax = plt.subplots(layout='tight')
     ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
     ax.plot(grid, fes)
 
     ax.set_xlabel("Coordination")
     ax.set_ylabel("FES [eV]")
+    ax.set_ylim(0, 1)
     
-    return fig
+    fig.savefig("fes_c.svg")
+    plt.close()
 
-def fes_q(grid, fes, err): # add pop and err
+def fes_q(grid, fes, err):
     fig, ax = plt.subplots(layout='tight')
     ax.fill_between(grid, fes-err, fes+err, alpha=0.3)
     ax.plot(grid, fes)
 
     ax.set_xlabel(r"$q_N\ [e]$")
     ax.set_ylabel("FES [eV]")
+    ax.set_ylim(0, 1)
     
-    return fig
+    fig.savefig("fes_q.svg")
+    plt.close()
 
 def fes_2D(grid_d, grid_c, fes):
     fig, ax = plt.subplots(layout='tight')
@@ -126,7 +217,8 @@ def fes_2D(grid_d, grid_c, fes):
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="FES [eV]")
 
-    return fig
+    fig.savefig("fes_2D.svg")
+    plt.close()
 
 def err_fes_2D(grid_d, grid_c, err):
     fig, ax = plt.subplots(layout='tight')
@@ -139,61 +231,68 @@ def err_fes_2D(grid_d, grid_c, err):
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="Err(FES) [eV]")
 
-    return fig
+    fig.savefig("err_fer_2D.svg")
+    plt.close()
 
 def av_d(time, av):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, av, 'o', ms=1)
+    ax.plot(time, av)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$\langle d_{N-N} \rangle\ [A]$")
 
-    return fig
+    fig.savefig("av_d.svg")
+    plt.close()
 
 def av_c(time, av):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, av, 'o', ms=1)
+    ax.plot(time, av)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$\langle Coordination \rangle$")
 
-    return fig
+    fig.savefig("av_c.svg")
+    plt.close()
 
 def av_q(time, av):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, av, 'o', ms=1)
+    ax.plot(time, av)
 
     ax.set_xlabel("t [ps]")
-    ax.set_ylabel(r"$q_N\ [e]$")
+    ax.set_ylabel(r"$\langle q_N \rangle\ [e]$")
 
-    return fig
+    fig.savefig("av_q.svg")
+    plt.close()
 
 def delta_d(time, av):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, av, 'o', ms=1)
+    ax.plot(time, av)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$\Delta d_{N-N}\ [A]$")
 
-    return fig
+    fig.savefig("delta_d.svg")
+    plt.close()
 
 def delta_c(time, av):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, av, 'o', ms=1)
+    ax.plot(time, av)
 
     ax.set_xlabel("t [ps]")
     ax.set_ylabel(r"$\Delta Coordination$")
 
-    return fig
+    fig.savefig("delta_c.svg")
+    plt.close()
 
 def delta_q(time, av):
     fig, ax = plt.subplots(layout='tight')
-    ax.plot(time, av, 'o', ms=1)
+    ax.plot(time, av)
 
     ax.set_xlabel("t [ps]")
-    ax.set_ylabel(r"$q_N\ [e]$")
+    ax.set_ylabel(r"$\Delta q_N\ [e]$")
 
-    return fig
+    fig.savefig("delta_q.svg")
+    plt.close()
 
 def chemiscope(structures, time, d, c):
     properties = {"d": {"target": "structure",
@@ -206,6 +305,14 @@ def chemiscope(structures, time, d, c):
                            "values": time,
                            "description": "time [ps]"}}
     
+    # atom_radius = []
+    # for atoms in structures:
+    #     for atom in atoms:
+    #         atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
+    # shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
+    # "shape": "selection"
+    # shapes=shapes
+
     settings = {"target": "structure",
                 "map": {"x": {"property": "d"},
                         "y": {"property": "c"},
@@ -213,7 +320,8 @@ def chemiscope(structures, time, d, c):
                 "structure": [{"bonds": False,
                                "spaceFilling": True,
                                "keepOrientation": True,
-                               "playbackDelay": 50}]}
+                               "playbackDelay": 200,
+                               "supercell": [3,3,1]}]}
     
     write_input("chemiscope.json.gz", structures=structures, properties=properties, settings=settings)
 
@@ -238,7 +346,7 @@ def chemiscope_charges(structures, d, c, q):
                 "structure": [{"bonds": False,
                                "spaceFilling": True,
                                "keepOrientation": True,
-                               "playbackDelay": 50,
+                               "playbackDelay": 200,
                                "supercell": [3,3,1],
                                "color": {"property": "charge", "palette": "bwr", "min":-1, "max":1}}]}
 
@@ -269,13 +377,13 @@ def chemiscope_charge(structures, d, c, q):
                 "structure": [{"bonds": False,
                                "spaceFilling": True,
                                "keepOrientation": True,
-                               "playbackDelay": 50,
+                               "playbackDelay": 200,
                                "supercell": [3,3,1],
                                "color": {"property": "charge", "palette": "bwr", "min":-1, "max":1}}]}
 
     environments = all_atomic_environments(structures)
 
-    write_input("chemiscope_charges.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
+    write_input("chemiscope_charge.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
 
 def pred(ref, pred):
     fig, ax = plt.subplots()
