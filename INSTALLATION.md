@@ -18,27 +18,40 @@ Remove other conda environments with PLUMED and/or GROMACS.
 
 ## Instructions
 
-### Conda environment with ASE and MACE
+### Conda environment
 
 ````
 conda create -n md_env python=3.11
 conda activate md_env
 conda install -c conda-forge numpy pandas matplotlib scipy notebook cython pybind11
-pip install torch torchvision cuequivariance cuequivariance-torch ase mlcolvar chemiscope rich
+pip install torch torchvision cuequivariance cuequivariance-torch chemiscope rich
 ````
 
 if needed install cmake with conda
 
 <!-- conda install py-plumed "numpy<2.0 ? -->
 
-### Luigi Bonati fork of MACE
+### Luigi Bonati fork of MACE (for MACECharge)
 
 ````
 git clone https://github.com/luigibonati/mace.git
-pip install ./mace
+pip install -e mace
 ````
 
 I downloaded mace-Fe111-charges.model from the link he sent me.
+
+### Luigi Bonati fork of ASE (for ExtraCV)
+
+````
+git clone https://github.com/luigibonati/ase.git -b feat_plumed_extracv
+pip install -e ase
+````
+
+### Latest version of mlcolvar (for GNN)
+
+````
+pip install git+https://github.com/luigibonati/mlcolvar@release/2.0
+````
 
 ### Libtorch
 

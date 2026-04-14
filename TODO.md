@@ -34,6 +34,7 @@ Overall the code need more comments, at least for the functions, with specified 
 
 - [~] Adapt radius in chemiscope plots using CR from ASE (reference in DEAL repo of LB)
 - [ ] Make plot with sampling superimposed on fes 2d (maybe with charge)
+- [ ] Visualize STATES file and FES from STATES
 - [X] Setup save options, location, name, dpi, transparent...
 - [X] Add color to 2D trj plots
 - [ ] Make plots to show where the bias is added and what it looks like
@@ -53,3 +54,5 @@ Overall the code need more comments, at least for the functions, with specified 
 
 - [ ] Export model with torch.export.export
 - [ ] Implement other descriptors as : LOCAL_CRISTALINITY, CONTACTMAP, KDE of DISTANCE
+- [X] Predict the charge using a GNN
+- [ ] Find a better way to sample a trajectory (using STATES ?)

@@ -1,3 +1,6 @@
+import os
+os.chdir("N2-Fe")
+
 import numpy as np
 from mlcolvar.data import DictDataset, DictModule
 from mlcolvar.cvs import RegressionCV
@@ -10,13 +13,15 @@ import plumed
 from ase.io import read
 import matplotlib.pyplot as plt
 
-import os
-os.chdir("N2-Fe")
-
 ### Import data ###
 
-# traj = read("traj_comp.traj", ":200001:10")
-_, d, c, _, _, _, _, _, _, _, _ = plumed.read_as_pandas("COLVAR").to_numpy()[:200001:10].T
+sampling_start, sampling_end, sampling_stride = 0, 200001, 10
+
+traj = read("traj_comp.traj", f"{sampling_start}:{sampling_end}:{sampling_stride}")
+
+data = plumed.read_as_pandas("COLVAR")[sampling_start:sampling_end:sampling_stride]
+d, c = data[["d", "c"]].to_numpy().T
+
 q = np.loadtxt("CHARGES")
 
 ### Create Dataset ###

@@ -1,11 +1,11 @@
+import os
+os.chdir("N2-Fe/unbiased")
+
 import numpy as np
 import matplotlib.pyplot as plt
 from ase import units
 from ase.io import read
 import plumed
-import os
-
-os.chdir("N2-Fe/unbiased")
 
 import analyze
 import figures

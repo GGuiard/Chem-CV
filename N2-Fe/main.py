@@ -1,3 +1,6 @@
+import os
+os.chdir("N2-Fe")
+
 from ase.calculators.plumed import Plumed, restart_from_trajectory
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 from ase.md.bussi import Bussi
@@ -7,15 +10,8 @@ from ase import units
 from mace.calculators import mace_mp
 
 import numpy as np
-import matplotlib.pyplot as plt
-
-import os
 import subprocess
 from rich.progress import Progress
-
-os.chdir("N2-Fe")
-
-import figures
 
 # Simulation parameters
 T = 700 # K
