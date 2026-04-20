@@ -393,4 +393,5 @@ def pred(ref, pred):
     ax.set_xlabel("Reference")
     ax.set_ylabel("Prediction")
 
-    return fig
+    fig.savefig("pred.svg")
+    plt.close()

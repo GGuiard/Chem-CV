@@ -117,6 +117,14 @@ save and exit with Ctrl+O, Enter, Ctrl+X
 source ~/.bashrc
 ````
 
+### ORCA
+
+Register and download the right version of ORCA on www.faccts.de.
+
+````
+tar -xf orca_6_1_1_linux_x86-64_shared_openmpi418_nodmrg.tar.xz
+````
+
 ### GROMACS patched with PLUMED
 
 ````
