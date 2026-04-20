@@ -19,7 +19,7 @@ transient = 0
 nb_bins_d = 50
 sigma_d = 0.1
 nb_bootstraps_1D, nb_bootstraps_2D = 10, 10
-traj_start, traj_end, traj_stride = 0, 500000, 50
+traj_start, traj_end, traj_stride = 0, 500000, 1
 
 # Postprocessing options
 use_energy = False
@@ -27,7 +27,7 @@ use_weights = False
 use_opes = False
 use_traj = True
 
-make_traj = True
+make_traj = False
 make_density = False
 make_fes = False
 
