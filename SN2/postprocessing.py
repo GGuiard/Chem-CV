@@ -126,5 +126,5 @@ if make_fes:
 plt.show()
 
 if use_traj:
-    figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
-    figures.chemiscope_chemcv(traj, time, d1, d2, {"q_Mulliken": q_Mulliken, "q_Loewdin": q_Loewdin, "q_Mayer": q_Mayer, "v_Mayer": v_Mayer}, q_Mayer)
+    if not use_chemcv: figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
+    else: figures.chemiscope_chemcv(traj, time, d1, d2, {"q_Mulliken": q_Mulliken, "q_Loewdin": q_Loewdin, "q_Mayer": q_Mayer, "v_Mayer": v_Mayer}, q_Mayer)

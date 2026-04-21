@@ -1,5 +1,5 @@
 import os
-os.chdir("PT")
+os.chdir("PT/TRAJ")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,18 +16,19 @@ kT = units.kB*T
 
 # Postprocessing parameters
 transient = 0
-nb_bins_d = 50
-sigma_d = 0.1
+nb_bins_d = 100
+sigma_d = 0.2
 nb_bootstraps_1D, nb_bootstraps_2D = 10, 10
 traj_start, traj_end, traj_stride = 0, 500000, 1
 
 # Postprocessing options
-use_energy = True
+use_energy = False
 use_weights = False
 use_opes = False
+use_chemcv = True
 use_traj = True
 
-make_traj = True
+make_traj = False
 make_density = False
 make_fes = False
 
@@ -40,7 +41,14 @@ time, dd, d1, d2 = data[["time", "dd", "d1", "d2"]].to_numpy().T
 if use_weights: weights = analyze.logw_to_w(data["opes.bias"].to_numpy().T, kT)
 if use_opes: rct, zed, neff, nker = data[["opes.rct", "opes.zed", "opes.neff", "opes.nker"]].to_numpy().T
 
-if use_traj: traj = read("traj_comp.traj", f"{traj_start}:{traj_end}:{traj_stride}")
+if use_chemcv:
+    chemcv = np.loadtxt("CHEMCV")
+    q_Mulliken = chemcv[:, 0:9]
+    q_Loewdin = chemcv[:, 9:18]
+    q_Mayer = chemcv[:, 18:27]
+    v_Mayer = chemcv[:, 27:36]
+
+if use_traj: traj = read("traj.xyz", f"{traj_start}:{traj_end}:{traj_stride}")
 
 ### Postprocessing ###
 
@@ -118,4 +126,5 @@ if make_fes:
 plt.show()
 
 if use_traj:
-    figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
+    if not use_chemcv: figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
+    else: figures.chemiscope_chemcv(traj, time, d1, d2, {"q_Mulliken": q_Mulliken, "q_Loewdin": q_Loewdin, "q_Mayer": q_Mayer, "v_Mayer": v_Mayer}, q_Mulliken)
