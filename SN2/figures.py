@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
-from chemiscope import write_input #, all_atomic_environments
+from chemiscope import write_input, all_atomic_environments
 # from ase.data import covalent_radii, chemical_symbols
 
 def trj_E(Emec, av, std):
@@ -64,6 +64,9 @@ def trj_2D(time, d1, d2):
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel(r"$d_{C-Cl_2}\ [A]$")
+    ax.set_xlim(1.5, 4)
+    ax.set_ylim(1.5, 4)
+    ax.set_aspect('equal', 'box')
 
     cbar = fig.colorbar(scatter, ax=ax)
     cbar.set_label(label="t [ps]")
@@ -109,6 +112,7 @@ def density_dd(grid, density):
 
     ax.set_xlabel(r"$d_{C-Cl_1} - d_{C-Cl_2}\ [A]$")
     ax.set_ylabel("Density")
+    ax.set_xlim(-2.5, 2.5)
     
     fig.savefig("density_dd.svg")
     plt.close()
@@ -119,6 +123,7 @@ def density_d1(grid, density):
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel("Density")
+    ax.set_xlim(1.5, 4)
     
     fig.savefig("density_d1.svg")
     plt.close()
@@ -129,6 +134,7 @@ def density_d2(grid, density):
 
     ax.set_xlabel(r"$d_{C-Cl_2}\ [A]$")
     ax.set_ylabel("Density")
+    ax.set_xlim(1.5, 4)
     
     fig.savefig("density_d2.svg")
     plt.close()
@@ -140,6 +146,9 @@ def density_2D(grid_d, density):
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel(r"$d_{C-Cl_2}\ [A]$")
+    ax.set_xlim(1.5, 4)
+    ax.set_ylim(1.5, 4)
+    ax.set_aspect('equal', 'box')
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="Density")
@@ -154,6 +163,7 @@ def fes_dd(grid, fes, err):
 
     ax.set_xlabel(r"$d_{C-Cl_1} - d_{C-Cl_2}\ [A]$")
     ax.set_ylabel("FES [eV]")
+    ax.set_xlim(-2.5, 2.5)
     ax.set_ylim(0, 1)
     
     fig.savefig("fes_dd.svg")
@@ -166,6 +176,7 @@ def fes_d1(grid, fes, err):
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel("FES [eV]")
+    ax.set_xlim(1.5, 4)
     ax.set_ylim(0, 1)
     
     fig.savefig("fes_d1.svg")
@@ -178,6 +189,7 @@ def fes_d2(grid, fes, err):
 
     ax.set_xlabel(r"$d_{C-Cl_2}\ [A]$")
     ax.set_ylabel("FES [eV]")
+    ax.set_xlim(1.5, 4)
     ax.set_ylim(0, 1)
     
     fig.savefig("fes_d2.svg")
@@ -190,6 +202,9 @@ def fes_2D(grid_d, fes):
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel(r"$d_{C-Cl_2}\ [A]$")
+    ax.set_xlim(1.5, 4)
+    ax.set_ylim(1.5, 4)
+    ax.set_aspect('equal', 'box')
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="FES [eV]")
@@ -204,6 +219,9 @@ def err_fes_2D(grid_d, err):
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel(r"$d_{C-Cl_2}\ [A]$")
+    ax.set_xlim(1.5, 4)
+    ax.set_ylim(1.5, 4)
+    ax.set_aspect('equal', 'box')
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(label="Err(FES) [eV]")
@@ -240,6 +258,39 @@ def chemiscope(structures, time, d1, d2):
                                "playbackDelay": 200}]}
     
     write_input("chemiscope.json.gz", structures=structures, properties=properties, settings=settings)
+
+def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
+    properties = {"d1": {"target": "structure",
+                        "values": d1,
+                        "description": "Distance between the carbon atom and the first chlorin atom"},
+                  "d2": {"target": "structure",
+                        "values": d2,
+                        "description": "Coordination between the carbon atom and the second chlorin atom"},
+                  "time": {"target": "structure",
+                           "values": time,
+                           "description": "time [ps]"},
+                  "color": {"target": "atom",
+                        "values": color.ravel(),
+                        "description": "charge [e]"}}
+    
+    for name, value in chemcv.items():
+        properties[name] = {"target": "structure", "values": value}
+
+    settings = {"target": "structure",
+                "map": {"x": {"property": "d1"},
+                        "y": {"property": "d2"},
+                        "color": {"property": "time"}},
+                "structure": [{"bonds": True,
+                               "spaceFilling": False,
+                               "keepOrientation": True,
+                               "playbackDelay": 200,
+                               "atomLabels": True,
+                               "labelsProperty": "color",
+                               "color": {"property": "color", "palette": "bwr", "min":-1, "max":1}}]}
+
+    environments = all_atomic_environments(structures)
+
+    write_input("chemiscope_chemcv.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
 
 def pred(ref, pred):
     fig, ax = plt.subplots()

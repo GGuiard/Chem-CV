@@ -5,12 +5,11 @@ from ase import Atoms
 from ase.build import molecule
 from ase.constraints import FixAtoms, FixedLine, FixedPlane
 from ase.optimize import QuasiNewton
-from ase.io import write, read
+from ase.io import write
 
 from mace.calculators import mace_off
 
 import numpy as np
-import figures
 import subprocess
 
 subprocess.run("rm -f traj.xyz", shell=True)
@@ -34,6 +33,4 @@ for d in np.linspace(-4.3, -3.3, 10):
     d1.append(atoms.get_distance(0,5))
     d2.append(atoms.get_distance(0,1))
 
-traj = read('traj.xyz', ':')
-time = np.arange(0, 10)
-figures.chemiscope(traj, time, d1, d2)
+np.savetxt("COLVAR", np.array([np.arange(10), np.array(d1)-np.array(d2), d1, d2]).T, delimiter=' ', fmt='%9.6f', header="! FIELDS time dd d1 d2")

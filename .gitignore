@@ -4,6 +4,7 @@ STATES
 HILLS
 CHARGES
 ENERGY
+CHEMCV
 bck.*
 *.json.gz
 *.traj
@@ -14,3 +15,4 @@ lightning_logs
 mace-Fe111-charges.model
 ase/
 Fe111-N2-lammps
+ORCA/

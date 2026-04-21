@@ -123,6 +123,38 @@ Register and download the right version of ORCA on www.faccts.de.
 
 ````
 tar -xf orca_6_1_1_linux_x86-64_shared_openmpi418_nodmrg.tar.xz
+mkdir ~/.config/ase
+vim ~/.config/ase/config.ini
+````
+
+insert by pressing I
+
+````
+[orca]
+command = /home/usr/orca_6_1_1_linux_x86-64_shared_openmpi418_nodmrg/orca
+````
+
+change usr with your username
+exit by pressing Escape and writing :wq!
+
+````
+nano ~/.bashrc
+````
+
+add to the end of the file
+
+````
+# >>> orca initialize >>>
+export ORCA_DIR=$HOME/orca_6_1_1_linux_x86-64_shared_openmpi418_nodmrg
+export PATH=$ORCA_DIR:$PATH
+# <<< orca initialize <<<
+````
+
+change usr with your username
+save and exit with Ctrl+O, Enter, Ctrl+X
+
+````
+source ~/.bashrc
 ````
 
 ### GROMACS patched with PLUMED
