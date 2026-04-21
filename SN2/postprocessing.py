@@ -43,10 +43,15 @@ if use_opes: rct, zed, neff, nker = data[["opes.rct", "opes.zed", "opes.neff", "
 
 if use_chemcv:
     chemcv = np.loadtxt("CHEMCV")
-    q_Mulliken = chemcv[:, 0:6]
-    q_Loewdin = chemcv[:, 6:12]
-    q_Mayer = chemcv[:, 12:18]
-    v_Mayer = chemcv[:, 18:24]
+    chemcv = {"q_Mulliken": chemcv[:, 0:6],
+              "q_Loewdin": chemcv[:, 6:12],
+              "q_Mayer": chemcv[:, 12:18],
+              "v_Mayer": chemcv[:, 18:24],
+              "q_Hirshfeld": chemcv[:, 24:30],
+              "q_MBIS": chemcv[:, 30:36],
+              "npop_MBIS": chemcv[:, 36:42],
+              "sigma_MBIS": chemcv[:, 42:48],
+              "q_CHELPG": chemcv[:, 48:54]}
 
 if use_traj: traj = read("traj.xyz", f"{traj_start}:{traj_end}:{traj_stride}")
 
@@ -127,4 +132,4 @@ plt.show()
 
 if use_traj:
     if not use_chemcv: figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
-    else: figures.chemiscope_chemcv(traj, time, d1, d2, {"q_Mulliken": q_Mulliken, "q_Loewdin": q_Loewdin, "q_Mayer": q_Mayer, "v_Mayer": v_Mayer}, q_Mayer)
+    else: figures.chemiscope_chemcv(traj, time, d1, d2, chemcv, chemcv["q_CHELPG"])
