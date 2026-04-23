@@ -274,7 +274,7 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
                         "description": "charge [e]"}}
     
     for name, value in chemcv.items():
-        properties[name] = {"target": "structure", "values": value}
+        properties['.'.join(name)] = {"target": "structure", "values": value.to_numpy()}
 
     settings = {"target": "structure",
                 "map": {"x": {"property": "d1"},

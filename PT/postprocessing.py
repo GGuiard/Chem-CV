@@ -9,6 +9,7 @@ import plumed
 
 import analyze
 import figures
+from orca_parser import ChemCV
 
 # Simulation parameters
 T = 300
@@ -42,11 +43,7 @@ if use_weights: weights = analyze.logw_to_w(data["opes.bias"].to_numpy().T, kT)
 if use_opes: rct, zed, neff, nker = data[["opes.rct", "opes.zed", "opes.neff", "opes.nker"]].to_numpy().T
 
 if use_chemcv:
-    chemcv = np.loadtxt("CHEMCV")
-    q_Mulliken = chemcv[:, 0:9]
-    q_Loewdin = chemcv[:, 9:18]
-    q_Mayer = chemcv[:, 18:27]
-    v_Mayer = chemcv[:, 27:36]
+    chemcv = ChemCV.load()
 
 if use_traj: traj = read("traj.xyz", f"{traj_start}:{traj_end}:{traj_stride}")
 
@@ -127,4 +124,4 @@ plt.show()
 
 if use_traj:
     if not use_chemcv: figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
-    else: figures.chemiscope_chemcv(traj, time, d1, d2, {"q_Mulliken": q_Mulliken, "q_Loewdin": q_Loewdin, "q_Mayer": q_Mayer, "v_Mayer": v_Mayer}, q_Mulliken)
+    else: figures.chemiscope_chemcv(traj, time, d1, d2, chemcv, chemcv["q_Hirshfeld"].to_numpy())

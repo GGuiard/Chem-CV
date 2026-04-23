@@ -9,8 +9,7 @@ Overall the code need more comments, at least for the functions, with specified 
 ### INSTALLATION.md
 
 - [ ] Change export PYTHONPATH in ~/.bashrc to a more secure option
-
-## N2-Fe
+- [ ] Make different python file reusable for different systems so that I don't have to copy them and update them
 
 ### main.py
 
@@ -56,3 +55,17 @@ Overall the code need more comments, at least for the functions, with specified 
 - [ ] Implement other descriptors as : LOCAL_CRISTALINITY, CONTACTMAP, KDE of DISTANCE
 - [X] Predict the charge using a GNN
 - [ ] Find a better way to sample a trajectory (using STATES ?)
+
+### create_traj.py
+
+- [ ] Use NEB from reactant to products
+- [ ] Add a little bit of noise
+
+### dft.py
+
+- [ ] Make a change so that each ORCA output can be saved in different directories
+
+### orca_parser.py
+
+- [ ] Split into two objects: a multi-index dataframe with all its changes and the chemcv
+- [ ] Change update so that a directory can be specified
