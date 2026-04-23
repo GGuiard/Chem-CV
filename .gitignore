@@ -9,6 +9,8 @@ bck.*
 *.json.gz
 *.traj
 *.ptc
+*.h5
+*.parquet
 __pycache__
 comments.dat
 lightning_logs

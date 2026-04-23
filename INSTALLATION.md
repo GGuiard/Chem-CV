@@ -23,7 +23,7 @@ Remove other conda environments with PLUMED and/or GROMACS.
 ````
 conda create -n md_env python=3.11
 conda activate md_env
-conda install -c conda-forge numpy pandas matplotlib scipy notebook cython pybind11
+conda install -c conda-forge numpy pandas matplotlib scipy notebook cython pybind11 pytables
 pip install torch torchvision cuequivariance cuequivariance-torch chemiscope rich
 ````
 
