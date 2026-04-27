@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import numpy as np
 import pandas as pd
@@ -26,15 +27,91 @@ class ChemCV(pd.DataFrame):
         
         # Define available ChemCVs with their properties
         self.AVAILABLE_CHEMCVS = {
-            "q_Mulliken": {"type": "atomic", "simpleinput": "MULLIKEN", "block": "", "source": self._orca_property, "parsingfunction": self._q_Mulliken},
-            "q_Loewdin": {"type": "atomic", "simpleinput": "LOEWDIN", "block": "%method LOEWDIN_BONDORDERTHRESH 0.00 end", "source": self._orca_property, "parsingfunction": self._q_Loewdin},
-            "q_Mayer": {"type": "atomic", "simpleinput": "MAYER", "block": "%method MAYER_BONDORDERTHRESH 0.00 end", "source": self._orca_property, "parsingfunction": self._q_Mayer},
-            "v_Mayer": {"type": "atomic", "simpleinput": "MAYER", "block": "%method MAYER_BONDORDERTHRESH 0.00 end", "source": self._orca_property, "parsingfunction": self._v_Mayer},
-            "q_Hirshfeld": {"type": "atomic", "simpleinput": "HIRSHFELD", "block": "", "source": self._orca_property, "parsingfunction": self._q_Hirshfeld},
-            "q_MBIS": {"type": "atomic", "simpleinput": "MBIS", "block": "", "source": self._orca_property, "parsingfunction": self._q_MBIS},
-            "npop_MBIS": {"type": "atomic", "simpleinput": "MBIS", "block": "", "source": self._orca_property, "parsingfunction": self._npop_MBIS},
-            "sigma_MBIS": {"type": "atomic", "simpleinput": "MBIS", "block": "", "source": self._orca_property, "parsingfunction": self._sigma_MBIS},
-            "q_CHELPG": {"type": "atomic", "simpleinput": "CHELPG", "block": "", "source": self._orca_property, "parsingfunction": self._q_CHELPG},
+            "q_Mulliken": {"type": "atomic",
+                           "simpleinput": "MULLIKEN",
+                           "block": "",
+                           "source": self._orca_property,
+                           "parsingfunction": self._q_Mulliken},
+            "q_Orb_Mulliken": {"type": "Orb",
+                               "simpleinput": "MULLIKEN",
+                               "block": "%output Print[ P_OrbCharges_M ] 1 end",
+                               "source": self._orca_out,
+                               "parsingfunction": self._q_Orb_Mulliken},
+            "p_AtMO_Mulliken": {"type": "AtMO",
+                                "simpleinput": "MULLIKEN",
+                                "block": "%output Print[ P_AtPopMO_M ] 1 end",
+                                "source": self._orca_out,
+                                "parsingfunction": self._p_AtMO_Mulliken},
+            "p_OrbMO_Mulliken": {"type": "OrbMO",
+                                 "simpleinput": "MULLIKEN",
+                                 "block": "%output Print[ P_OrbPopMO_M ] 1 end",
+                                 "source": self._orca_out,
+                                 "parsingfunction": self._p_OrbMO_Mulliken},
+            "q_Loewdin": {"type": "atomic",
+                          "simpleinput": "LOEWDIN",
+                          "block": "",
+                          "source": self._orca_property,
+                          "parsingfunction": self._q_Loewdin},
+            "q_Orb_Loewdin": {"type": "Orb",
+                               "simpleinput": "LOEWDIN",
+                               "block": "%output Print[ P_OrbCharges_L ] 1 end",
+                               "source": self._orca_out,
+                               "parsingfunction": self._q_Orb_Loewdin},
+            "p_AtMO_Loewdin": {"type": "AtMO",
+                                "simpleinput": "LOEWDIN",
+                                "block": "%output Print[ P_AtPopMO_L ] 1 end",
+                                "source": self._orca_out,
+                                "parsingfunction": self._p_AtMO_Loewdin},
+            "p_OrbMO_Loewdin": {"type": "OrbMO",
+                                 "simpleinput": "LOEWDIN",
+                                 "block": "%output Print[ P_OrbPopMO_L ] 1 end",
+                                 "source": self._orca_out,
+                                 "parsingfunction": self._p_OrbMO_Loewdin},
+            "q_Mayer": {"type": "atomic",
+                        "simpleinput": "MAYER",
+                        "block": "",
+                        "source": self._orca_property,
+                        "parsingfunction": self._q_Mayer},
+            "v_Mayer": {"type": "atomic",
+                        "simpleinput": "MAYER",
+                        "block": "",
+                        "source": self._orca_property,
+                        "parsingfunction": self._v_Mayer},
+            "b_Mayer": {"type": "bond",
+                        "simpleinput": "MAYER",
+                        "block": "%method MAYER_BONDORDERTHRESH 0.00 end",
+                        "source": self._orca_property,
+                        "parsingfunction": self._b_Mayer},
+            "q_Hirshfeld": {"type": "atomic",
+                            "simpleinput": "HIRSHFELD",
+                            "block": "",
+                            "source": self._orca_property,
+                            "parsingfunction": self._q_Hirshfeld},
+            "q_MBIS": {"type": "atomic",
+                       "simpleinput": "MBIS",
+                       "block": "",
+                       "source": self._orca_property,
+                       "parsingfunction": self._q_MBIS},
+            "npop_MBIS": {"type": "atomic",
+                          "simpleinput": "MBIS",
+                          "block": "",
+                          "source": self._orca_property,
+                          "parsingfunction": self._npop_MBIS},
+            "sigma_MBIS": {"type": "atomic",
+                           "simpleinput": "MBIS",
+                           "block": "",
+                           "source": self._orca_property,
+                           "parsingfunction": self._sigma_MBIS},
+            "q_CHELPG": {"type": "atomic",
+                         "simpleinput": "CHELPG",
+                         "block": "",
+                         "source": self._orca_property,
+                         "parsingfunction": self._q_CHELPG},
+            "q_RESP": {"type": "atomic",
+                       "simpleinput": "RESP",
+                       "block": "",
+                       "source": self._orca_out,
+                       "parsingfunction": self._q_RESP},
         }
         
         # Determine which ChemCVs to parse
@@ -284,6 +361,32 @@ class ChemCV(pd.DataFrame):
                 for index in range(self.nb_atoms):
                     self.columns_tuples.append((chemcv, f"{index}"))
                 self.columns_info[chemcv] = self.nb_atoms
+
+            elif chemcv_type == "bond":
+                if not hasattr(self, 'nb_atoms'):
+                    raise ValueError("nb_atoms is required when creating a new ChemCV object")
+                n_bonds = self.nb_atoms * (self.nb_atoms - 1) // 2
+                for index in range(n_bonds):
+                    self.columns_tuples.append((chemcv, f"{index}"))
+                self.columns_info[chemcv] = n_bonds
+
+            elif chemcv_type == "Orb":
+                n = 60
+                for index in range(n):
+                    self.columns_tuples.append((chemcv, f"{index}"))
+                self.columns_info[chemcv] = n
+
+            elif chemcv_type == "AtMO":
+                n = 6*33
+                for index in range(n):
+                    self.columns_tuples.append((chemcv, f"{index}"))
+                self.columns_info[chemcv] = n
+
+            elif chemcv_type == "OrbMO":
+                n = 60*33
+                for index in range(n):
+                    self.columns_tuples.append((chemcv, f"{index}"))
+                self.columns_info[chemcv] = n
         
         # Create MultiIndex columns
         return pd.DataFrame(np.zeros((self.nb_traj, len(self.columns_tuples)), dtype=np.float32), columns=pd.MultiIndex.from_tuples(self.columns_tuples, names=["ChemCV", "Index"]))
@@ -300,17 +403,340 @@ class ChemCV(pd.DataFrame):
             orca_gbw = json.load(f)
         return orca_gbw
 
+    def _orca_out(self) -> str:
+        with open("ORCA/orca.out", 'r') as f:
+            return f.read()
+
+    def _ao_key(self, orbital_str):
+        """
+        Extract and convert orbital notation to sortable components.
+        
+        Args:
+            orbital_str: String like "1s", "2px", "3dxy", "4fz3", etc.
+        
+        Returns:
+            Tuple: (n, l_order, m_order) for sorting
+        """
+        # Extract principal quantum number (n)
+        n_match = re.match(r'^(\d+)', orbital_str)
+        n = int(n_match.group(1))
+        
+        # Extract orbital type and component
+        orbital_type_match = re.match(r'^\d+([spdfg])(.*)', orbital_str)
+        
+        orbital_type = orbital_type_match.group(1)
+        m = orbital_type_match.group(2) if orbital_type_match.group(2) else ""
+        
+        # Map orbital type to l value
+        l_map = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
+        l = l_map[orbital_type]
+        
+        return (n, l, m)
+
     def _q_Mulliken(self, properties) -> np.ndarray:
         return np.array(properties["Geometries"][0]["Mulliken_Population_Analysis"][0]["AtomicCharges"], dtype=np.float32).T[0]
 
+    def _q_Orb_Mulliken(self, output_text: str) -> np.ndarray:
+        """Parse MULLIKEN ORBITAL CHARGES section."""
+        # Find the section
+        pattern = r"MULLIKEN ORBITAL CHARGES.*?\n.*?\n.*?\n(.*?)(?:\nSum of orbital charges)"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("MULLIKEN ORBITAL CHARGES section not found")
+        
+        section = match.group(1)
+        charges = {}
+        
+        for line in section.split('\n'):
+            parts = line.split()
+
+            atom_index = int(re.match(r'^(\d+)', parts[1]).group(1))
+            ao_key = parts[2]
+            charge = float(parts[3])
+
+            charges[(atom_index, ao_key)] = charge
+
+        charges = {key: charge for key, charge in sorted(charges.items(), key=lambda x: (x[0][0], self._ao_key(x[0][1])))}
+
+        reduced_charges = {}
+        for key, charge in charges.items():
+            reduced_key = (key[0], self._ao_key(key[1])[:2])
+            if reduced_key not in reduced_charges:
+                reduced_charges[reduced_key] = 0.0
+            reduced_charges[reduced_key] += charge
+        charges = reduced_charges
+
+        return np.array(list(charges.values()), dtype=np.float32)
+
+    def _p_AtMO_Mulliken(self, output_text: str) -> np.ndarray:
+        """Parse MULLIKEN ATOM POPULATIONS PER MO section."""
+        # Find the section
+        pattern = r"MULLIKEN ATOM POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("MULLIKEN ATOM POPULATIONS PER MO section not found")
+        
+        section = match.group(1)
+        blocks = section.split('\n\n')
+        
+        # Single pass: build 2D dict {atom_idx: {mo_idx: population}}
+        data_dict = {}
+        
+        for block in blocks:
+            lines = block.split('\n')
+
+            mo_indices = [int(mo_index) for mo_index in lines[0].split()]
+
+            for line in lines[4:]:
+                parts = line.split()
+
+                atom_index, populations = int(parts[0]), parts[2:]
+
+                if atom_index not in data_dict:
+                    data_dict[atom_index] = {}
+
+                for mo_index, pop in zip(mo_indices, populations):
+                    if mo_index < 33:
+                        data_dict[atom_index][mo_index] = float(pop)
+        
+        if not data_dict:
+            raise ValueError("No atom population per mo data found")
+        
+        # Determine dimensions
+        if not hasattr(self, 'nb_atoms') or self.nb_atoms is None:
+            self.nb_atoms = max(data_dict.keys()) + 1
+
+        if not hasattr(self, 'nb_orbitals') or self.nb_orbitals is None:
+            self.nb_orbitals = max(max(mos.keys()) for mos in data_dict.values()) + 1
+
+        # Convert 2D dict to 1D array with zeros for missing values
+        data = np.zeros(self.nb_atoms * self.nb_orbitals, dtype=np.float32)
+        
+        for atom_idx, mo_dict in data_dict.items():
+            for mo_idx, population in mo_dict.items():
+                flat_idx = atom_idx * self.nb_orbitals + mo_idx
+                data[flat_idx] = population
+        
+        return data
+
+    def _p_OrbMO_Mulliken(self, output_text: str) -> np.ndarray:
+        """Parse MULLIKEN ORBITAL POPULATIONS PER MO section."""
+        # Find the section
+        pattern = r"MULLIKEN ORBITAL POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("MULLIKEN ORBITAL POPULATIONS PER MO section not found")
+        
+        section = match.group(1)
+        blocks = section.split('\n\n')
+        
+        # Single pass: build 2D dict {orbital_idx: {mo_idx: population}}
+        data_dict = {}
+
+        for block in blocks:
+            lines = block.split('\n')
+
+            mo_indices = [int(mo_index) for mo_index in lines[0].split()]
+
+            for line in lines[4:]:
+                parts = line.split()
+
+                atom_index = int(re.match(r'^(\d+)', parts[0]).group(1))
+                ao_key = parts[1]
+                populations = parts[2:]
+                
+                orbital_key = (atom_index, ao_key)
+
+                if orbital_key not in data_dict:
+                    data_dict[orbital_key] = {}
+
+                for mo_index, pop in zip(mo_indices, populations):
+                    if mo_index < 33:
+                        data_dict[orbital_key][mo_index] = float(pop)
+
+        data_dict = {key: population for key, population in sorted(data_dict.items(), key=lambda x: (x[0][0], self._ao_key(x[0][1])))}
+
+        reduced_data_dict = {}
+        for orbital_key, mo_dict in data_dict.items():
+            reduced_orbital_key = (orbital_key[0], self._ao_key(orbital_key[1])[:2])
+            if reduced_orbital_key not in reduced_data_dict:
+                reduced_data_dict[reduced_orbital_key] = {}
+            for mo_key, population in mo_dict.items():
+                if mo_key not in reduced_data_dict[reduced_orbital_key]:
+                    reduced_data_dict[reduced_orbital_key][mo_key] = 0.0
+                reduced_data_dict[reduced_orbital_key][mo_key] += population
+        data_dict = reduced_data_dict
+
+        # Convert 2D dict to 1D array with zeros for missing values
+        self.nb_orbitals, self.nb_mos = 60, 33
+        data = np.zeros(self.nb_orbitals * self.nb_mos, dtype=np.float32)
+        
+        for orbital_index, mo_dict in enumerate(data_dict.values()):
+            for mo_index, population in mo_dict.items():
+                flat_idx = orbital_index * self.nb_mos + mo_index
+                data[flat_idx] = population
+
+        return data
+    
     def _q_Loewdin(self, properties) -> np.ndarray:
         return np.array(properties["Geometries"][0]["Loewdin_Population_Analysis"][0]["AtomicCharges"], dtype=np.float32).T[0]
+
+    def _q_Orb_Loewdin(self, output_text: str) -> np.ndarray:
+        """Parse LOEWDIN ORBITAL CHARGES section."""
+        # Find the section
+        pattern = r"LOEWDIN ORBITAL CHARGES.*?\n.*?\n(.*?)(?:\n\n)"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("LOEWDIN ORBITAL CHARGES section not found")
+        
+        section = match.group(1)
+        charges = {}
+        
+        for line in section.split('\n'):
+            parts = line.split()
+            
+            atom_index = int(re.match(r'^(\d+)', parts[1]).group(1))
+            ao_key = parts[2]
+            charge = float(parts[3])
+
+            charges[(atom_index, ao_key)] = charge
+
+        charges = {key: charge for key, charge in sorted(charges.items(), key=lambda x: (x[0][0], self._ao_key(x[0][1])))}
+
+        reduced_charges = {}
+        for key, charge in charges.items():
+            reduced_key = (key[0], self._ao_key(key[1])[:2])
+            if reduced_key not in reduced_charges:
+                reduced_charges[reduced_key] = 0.0
+            reduced_charges[reduced_key] += charge
+        charges = reduced_charges
+
+        return np.array(list(charges.values()), dtype=np.float32)
+
+    def _p_AtMO_Loewdin(self, output_text: str) -> np.ndarray:
+        """Parse LOEWDIN ATOM POPULATIONS PER MO section."""
+        # Find the section
+        pattern = r"LOEWDIN ATOM POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("LOEWDIN ATOM POPULATIONS PER MO section not found")
+        
+        section = match.group(1)
+        blocks = section.split('\n\n')
+        
+        # Single pass: build 2D dict {atom_idx: {mo_idx: population}}
+        data_dict = {}
+        
+        for block in blocks:
+            lines = block.split('\n')
+
+            mo_indices = [int(mo_index) for mo_index in lines[0].split()]
+
+            for line in lines[4:]:
+                parts = line.split()
+
+                atom_index, populations = int(parts[0]), parts[2:]
+
+                if atom_index not in data_dict:
+                    data_dict[atom_index] = {}
+
+                for mo_index, pop in zip(mo_indices, populations):
+                    if mo_index < 33:
+                        data_dict[atom_index][mo_index] = float(pop)
+        
+        if not data_dict:
+            raise ValueError("No atom population per mo data found")
+        
+        # Determine dimensions
+        if not hasattr(self, 'nb_atoms') or self.nb_atoms is None:
+            self.nb_atoms = max(data_dict.keys()) + 1
+
+        if not hasattr(self, 'nb_mos') or self.nb_mos is None:
+            self.nb_mos = max(max(mos.keys()) for mos in data_dict.values()) + 1
+
+        # Convert 2D dict to 1D array with zeros for missing values
+        data = np.zeros(self.nb_atoms * self.nb_mos, dtype=np.float32)
+        
+        for atom_idx, mo_dict in data_dict.items():
+            for mo_idx, population in mo_dict.items():
+                flat_idx = atom_idx * self.nb_mos + mo_idx
+                data[flat_idx] = population
+        
+        return data
+
+    def _p_OrbMO_Loewdin(self, output_text: str) -> np.ndarray:
+        """Parse LOEWDIN ORBITAL POPULATIONS PER MO section."""
+        # Find the section
+        pattern = r"LOEWDIN ORBITAL POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("LOEWDIN ORBITAL POPULATIONS PER MO section not found")
+        
+        section = match.group(1)
+        blocks = section.split('\n\n')
+        
+        # Single pass: build 2D dict {orbital_idx: {mo_idx: population}}
+        data_dict = {}
+
+        for block in blocks:
+            lines = block.split('\n')
+
+            mo_indices = [int(mo_index) for mo_index in lines[0].split()]
+
+            for line in lines[4:]:
+                parts = line.split()
+
+                atom_index = int(re.match(r'^(\d+)', parts[0]).group(1))
+                ao_key = parts[1]
+                populations = parts[2:]
+                
+                orbital_key = (atom_index, ao_key)
+
+                if orbital_key not in data_dict:
+                    data_dict[orbital_key] = {}
+
+                for mo_index, pop in zip(mo_indices, populations):
+                    if mo_index < 33:
+                        data_dict[orbital_key][mo_index] = float(pop)
+
+        data_dict = {key: population for key, population in sorted(data_dict.items(), key=lambda x: (x[0][0], self._ao_key(x[0][1])))}
+
+        reduced_data_dict = {}
+        for orbital_key, mo_dict in data_dict.items():
+            reduced_orbital_key = (orbital_key[0], self._ao_key(orbital_key[1])[:2])
+            if reduced_orbital_key not in reduced_data_dict:
+                reduced_data_dict[reduced_orbital_key] = {}
+            for mo_key, population in mo_dict.items():
+                if mo_key not in reduced_data_dict[reduced_orbital_key]:
+                    reduced_data_dict[reduced_orbital_key][mo_key] = 0.0
+                reduced_data_dict[reduced_orbital_key][mo_key] += population
+        data_dict = reduced_data_dict
+
+        # Convert 2D dict to 1D array with zeros for missing values
+        self.nb_orbitals, self.nb_mos = 60, 33
+        data = np.zeros(self.nb_orbitals * self.nb_mos, dtype=np.float32)
+        
+        for orbital_index, mo_dict in enumerate(data_dict.values()):
+            for mo_index, population in mo_dict.items():
+                flat_idx = orbital_index * self.nb_mos + mo_index
+                data[flat_idx] = population
+
+        return data
 
     def _q_Mayer(self, properties) -> np.ndarray:
         return np.array(properties["Geometries"][0]["Mayer_Population_Analysis"][0]["QA"], dtype=np.float32).T[0]
 
     def _v_Mayer(self, properties) -> np.ndarray:
         return np.array(properties["Geometries"][0]["Mayer_Population_Analysis"][0]["VA"], dtype=np.float32).T[0]
+
+    def _b_Mayer(self, properties) -> np.ndarray:
+        return np.array(properties["Geometries"][0]["Mayer_Population_Analysis"][0]["BondOrders"], dtype=np.float32).T[0]
 
     def _q_Hirshfeld(self, properties) -> np.ndarray:
         return np.array(properties["Geometries"][0]["Hirshfeld_Population_Analysis"][0]["AtomicCharges"], dtype=np.float32).T[0]
@@ -326,6 +752,32 @@ class ChemCV(pd.DataFrame):
         
     def _q_CHELPG(self, properties) -> np.ndarray:
         return np.array(properties["Geometries"][0]["CHELPG_Population_Analysis"][0]["AtomicCharges"], dtype=np.float32).T[0]
+
+    def _q_RESP(self, output_text: str) -> np.ndarray:
+        """Parse RESP Charges section."""
+        # Find the section
+        pattern = r"RESP Charges\s*\n(.*?)(?:Total charge:|\Z)"
+        match = re.search(pattern, output_text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("RESP Charges section not found")
+        
+        section = match.group(1)
+        charges = []
+        
+        for line in section.split('\n'):
+            if ':' in line:
+                # Extract the charge (last float on the line)
+                parts = line.split(':')
+                if len(parts) >= 2:
+                    try:
+                        charge_str = parts[-1].strip()
+                        charge = float(charge_str)
+                        charges.append(charge)
+                    except ValueError:
+                        continue
+        
+        return np.array(charges, dtype=np.float32)
 
     def get_orca_input(self) -> Tuple[str, str]:
         """
@@ -346,9 +798,6 @@ class ChemCV(pd.DataFrame):
         
         simpleinput = ' '.join(simpleinput)
         blocks = '\n'.join(blocks)
-
-        if simpleinput: simpleinput = ' ' + simpleinput
-        if blocks: blocks = '\n' + blocks
         
         return simpleinput, blocks
     
@@ -368,15 +817,23 @@ class ChemCV(pd.DataFrame):
             if source == self._orca_property:
                 properties = self._orca_property()
             elif source == self._orca_gbw:
-                properties = self._orca_gbw()
+                gbw = self._orca_gbw()
+            elif source == self._orca_out:
+                output = self._orca_out()
             else:
                 raise ValueError(f"Unknown source: {source}")
         
         col_idx = 0
         for chemcv, n_values in zip(self.active_chemcvs, self.columns_info.values()):
             parsing_function = self.AVAILABLE_CHEMCVS[chemcv]["parsingfunction"]
+            source = self.AVAILABLE_CHEMCVS[chemcv]["source"]
             try:
-                data = parsing_function(properties)
+                if source == self._orca_property:
+                    data = parsing_function(properties)
+                elif source == self._orca_gbw:
+                    data = parsing_function(gbw)
+                elif source == self._orca_out:
+                    data = parsing_function(output)
                 assert len(data) == n_values, f"Expected {n_values} values for {chemcv}, got {len(data)}"
                 self.iloc[self.current_row, col_idx:col_idx + n_values] = data
             except (KeyError, IndexError, TypeError) as e:

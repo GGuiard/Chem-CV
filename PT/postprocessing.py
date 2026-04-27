@@ -26,7 +26,7 @@ traj_start, traj_end, traj_stride = 0, 500000, 1
 use_energy = False
 use_weights = False
 use_opes = False
-use_chemcv = False
+use_chemcv = True
 use_traj = True
 
 make_traj = False
