@@ -72,6 +72,7 @@ Overall the code need more comments, at least for the functions, with specified 
 - [ ] Split into two objects: a multi-index dataframe with all its changes and the chemcv
 - [ ] Change update so that a directory can be specified
 - [ ] Move parsing functions to another file (as well as the available chemcv dictionary ?)
+- [ ] Add threshold when relevant (p_AtMO)
 - [ ] Make the dataframe initialize on the first update (and on other updates if new indexes are discovered it should either create new columns and complete them with 0 or raise a warning)
 - [ ] Make parsing functions return (ND) dictionnary
 - [ ] Make multiindexdataframe object handle get and set for variable size quantities and change the way it is saved either by creating more header lines or by concatenating the index with points, and by the way adapt the format of each quantities. It should be a simple dataframe with indexes separated by points which can be saved to text, accesed and set in fancy ways...
