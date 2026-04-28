@@ -2,6 +2,7 @@ import os
 os.chdir("debug GNN")
 
 from mlcolvar.data import DictModule
+from mlcolvar.data.utils import save_dataset_configurations_as_extyz
 from mlcolvar.cvs import RegressionCV
 from mlcolvar.utils.trainer import MetricsCallback
 from mlcolvar.utils.plot import plot_metrics
@@ -15,6 +16,9 @@ from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from ase.io import read
 import numpy as np
 import matplotlib.pyplot as plt
+
+import torch
+# torch.set_default_dtype(torch.float64)
 
 ### Create Dataset ###
 
@@ -34,39 +38,41 @@ target = [0.57422   , 0.610327  , 0.609769  , 0.5740615 , 0.5439325 , 0.5691155 
           0.495367  , 0.5483315 , 0.571185  , 0.5382135 , 0.496143  , 0.5241565 , 0.5792755,
           0.5887655 , 0.546811 ] # Mean charge on N2
 
-# dataset = create_dataset_from_trajectories("traj_N2.xyz", topologies=None, cutoff=10.0, graph_labels=target)
+dataset = create_dataset_from_trajectories("traj_N2.xyz", topologies=None, cutoff=4.0, graph_labels=target, system_selection="type N", environment_selection="not type N")
+save_dataset_configurations_as_extyz(dataset, "test.xyz")
+datamodule = DictModule(dataset, lengths=[0.8,0.2])
 
-# datamodule = DictModule(dataset, lengths=[0.8,0.2])
+# trajectories = read("traj_N2.traj", ":")
 
-trajectories = read("traj_N2.traj", ":")
+# atomic_numbers = trajectories[0].get_atomic_numbers()
+# cell = np.array(trajectories[0].get_cell())
+# pbc = trajectories[0].get_pbc()
+# z_table = AtomicNumberTable.from_zs(atomic_numbers)
 
-atomic_numbers = trajectories[0].get_atomic_numbers()
-cell = np.array(trajectories[0].get_cell())
-pbc = trajectories[0].get_pbc()
-z_table = AtomicNumberTable.from_zs(atomic_numbers)
+# configurations = []
+# for i in range(len(trajectories)):
+#     configuration = Configuration(atomic_numbers, trajectories[i].get_positions(), cell, pbc, None, np.array([[target[i]]]))    
+#     configurations.append(configuration)
 
-configurations = []
-for i in range(len(trajectories)):
-    configuration = Configuration(atomic_numbers, trajectories[i].get_positions(), cell, pbc, None, np.array([[target[i]]]))    
-    configurations.append(configuration)
+# dataset = create_dataset_from_configurations(configurations, z_table, cutoff=10.0, show_progress=False)
+# for i, data_list in enumerate(dataset["data_list"]):
+#     data_list["graph_labels"] = i
 
-dataset = create_dataset_from_configurations(configurations, z_table, cutoff=10.0, show_progress=False)
-for i, data_list in enumerate(dataset["data_list"]):
-    data_list["graph_labels"] = i
-
-datamodule = DictModule(dataset, lengths=[0.8,0.2], batch_size=32)
+# datamodule = DictModule(dataset, lengths=[0.8,0.2], batch_size=32)
 
 ### Create Model ###
 
-model = SchNetModel(n_out=1, cutoff=dataset.metadata["cutoff"], atomic_numbers=dataset.metadata["atomic_numbers"], w_out_after_pool=True)
-model = RegressionCV(model)
+gnn_model = SchNetModel(n_out=1, cutoff=dataset.metadata["cutoff"], atomic_numbers=dataset.metadata["atomic_numbers"], w_out_after_pool=False, n_layers=2)
+
+options = {'optimizer': {'lr': 1e-3}}
+model = RegressionCV(gnn_model, options=options)
 
 ### Define Trainer ###
 
 metrics = MetricsCallback()
-early_stopping = EarlyStopping(monitor="valid_loss", patience=10, min_delta=1e-5)
+early_stopping = EarlyStopping(monitor="valid_loss", patience=5000, min_delta=1e-5)
 
-trainer = Trainer(callbacks=[metrics, early_stopping], enable_model_summary=False)
+trainer = Trainer(callbacks=[metrics, early_stopping], enable_model_summary=False, max_epochs=5000)
 
 pred = model(dataset.get_graph_inputs()).detach().squeeze()
 fig, ax = plt.subplots()
