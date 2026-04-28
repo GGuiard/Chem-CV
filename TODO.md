@@ -9,7 +9,7 @@ Overall the code need more comments, at least for the functions, with specified 
 ### INSTALLATION.md
 
 - [ ] Change export PYTHONPATH in ~/.bashrc to a more secure option
-- [ ] Make different python file reusable for different systems so that I don't have to copy them and update them
+- [ ] Make different python file reusable for different systems so that to not have to copy them and update them
 
 ### main.py
 
@@ -58,22 +58,21 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### create_traj.py
 
-- [ ] Use NEB from reactant to products
+- [X] Use NEB from reactant to products
 - [ ] Add a little bit of noise
 
 ### dft.py
 
-- [ ] Make a change so that each ORCA output can be saved in different directories
+- [X] Make a change so that each ORCA output can be saved in different directories
 
 ### orca_parser.py
 
 - [ ] Add options to group together orbitals of same n and l or even of same n
 - [ ] Add possibility to choose options for chemcv (atoms, bonds, ao, mo...) globally and/or for each chemcv
-- [ ] Split into two objects: a multi-index dataframe with all its changes and the chemcv
-- [ ] Change update so that a directory can be specified
-- [ ] Move parsing functions to another file (as well as the available chemcv dictionary ?)
+- [X] Split into two objects: a multi-index dataframe with all its changes and the chemcv
+- [X] Change update so that a directory can be specified
+- [X] Move parsing functions to another file (as well as the available chemcv dictionary ?)
 - [ ] Add threshold when relevant (p_AtMO)
-- [ ] Make the dataframe initialize on the first update (and on other updates if new indexes are discovered it should either create new columns and complete them with 0 or raise a warning)
-- [ ] Make parsing functions return (ND) dictionnary
-- [ ] Make multiindexdataframe object handle get and set for variable size quantities and change the way it is saved either by creating more header lines or by concatenating the index with points, and by the way adapt the format of each quantities. It should be a simple dataframe with indexes separated by points which can be saved to text, accesed and set in fancy ways...
-- [ ] Make a greedy or tolerant option which respectively decides if an absent index should mean the deletion of a column and if a new index should mean the creation of a column
+- [X] Make the dataframe initialize on the first update (and on other updates if new indexes are discovered it should either create new columns and complete them with 0 or raise a warning)
+- [X] Make parsing functions return (MD) dictionnary
+- [X] Make a greedy or tolerant option which respectively decides if an absent index should mean the deletion of a column and if a new index should mean the creation of a column

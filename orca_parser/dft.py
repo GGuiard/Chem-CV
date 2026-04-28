@@ -3,7 +3,8 @@ os.chdir("orca_parser")
 
 from ChemCV import ChemCV
 
-chemcv = ChemCV()
-simpleinput, blocks = chemcv.get_orca_input()
+chemcv = ChemCV(nb_traj=1)
 chemcv.update()
-chemcv.save()
+# print(chemcv)
+# print(chemcv.summary())
+chemcv.save_json("CHEMCV")
