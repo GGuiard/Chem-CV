@@ -27,9 +27,9 @@ use_energy = False
 use_weights = False
 use_opes = False
 use_chemcv = True
-use_traj = True
+use_traj = False
 
-make_traj = False
+make_traj = True
 make_density = False
 make_fes = False
 
@@ -105,6 +105,12 @@ if make_traj:
         figures.trj_zed(time, zed)
         figures.trj_n(time, neff, nker)
 
+    if use_chemcv:
+        figures.trj_chemcv_charges(chemcv["q_Mulliken"].to_dict(), fixmin=True, fixmax=True, legend=False)
+        figures.trj_chemcv_populations(chemcv["p_AtMO_Mulliken"].to_dict(), fixmin=True, fixmax=True, threshold=10, legend=False)
+        figures.trj_chemcv_energies(chemcv["E_MO"].to_dict(), fixmin=True, fixmax=True, threshold=0.1, legend=False)
+        figures.trj_chemcv(chemcv["sigma_MBIS"].to_dict(), ylabel="sigma_MBIS", fixmin=True, legend=False)
+
 if make_density:
     figures.density_dd(grid_dd, density_dd)
     figures.density_d1(grid_d, density_d1)
@@ -123,5 +129,7 @@ if make_fes:
 plt.show()
 
 if use_traj:
-    if not use_chemcv: figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
-    else: figures.chemiscope_chemcv(traj, time, d1, d2, chemcv, chemcv["sigma_MBIS"].to_numpy())
+    if use_chemcv:
+        figures.chemiscope_chemcv(traj, time, d1, d2, chemcv.to_dict(), chemcv["q_RESP"].to_numpy().T)
+    else:
+        figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])

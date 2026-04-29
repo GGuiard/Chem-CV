@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
 from chemiscope import write_input, all_atomic_environments
+from orca_parser import TreeFrame
 # from ase.data import covalent_radii, chemical_symbols
 
 def trj_E(Emec, av, std):
@@ -274,7 +275,7 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
                         "description": "charge [e]"}}
     
     for name, value in chemcv.items():
-        properties['.'.join(name)] = {"target": "structure", "values": value.to_numpy()}
+        properties[name] = {"target": "structure", "values": value}
 
     settings = {"target": "structure",
                 "map": {"x": {"property": "d1"},
@@ -291,6 +292,118 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
     environments = all_atomic_environments(structures)
 
     write_input("chemiscope_chemcv.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
+
+def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixmax: bool = False, threshold: str = 0.0, legend: bool = True) -> None:
+    fig, ax = plt.subplots()
+    for key, value in chemcv.items():
+
+        if max(value) - min(value) < threshold:
+            continue
+
+        if fixmin:
+            value -= min(value)
+            if fixmax:
+                value /= max(value)
+        elif fixmax:
+            value -= max(value)
+
+        if isinstance(key, tuple):
+            label = '.'.join(key)
+        else:
+            label = key
+
+        ax.plot(value, label=label)
+    
+    ax.set_xlabel("number of frame")
+    ax.set_ylabel(ylabel)
+    if legend: ax.legend()
+
+    fig.savefig("trj_chemcv.svg")
+    plt.close()
+
+def trj_chemcv_charges(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0.1, legend: bool = True) -> None:
+    fig, ax = plt.subplots()
+    for key, value in chemcv.items():
+
+        if max(value) - min(value) < threshold:
+            continue
+
+        if fixmin:
+            value -= min(value)
+            if fixmax:
+                value /= max(value)
+        elif fixmax:
+            value -= max(value)
+
+        if isinstance(key, tuple):
+            label = '.'.join(key)
+        else:
+            label = key
+
+        ax.plot(value, label=label)
+    
+    ax.set_xlabel("number of frame")
+    ax.set_ylabel("q [e]")
+    if legend: ax.legend()
+
+    fig.savefig("trj_chemcv_charges.svg")
+    plt.close()
+
+def trj_chemcv_populations(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 100, legend: bool = True) -> None:
+    fig, ax = plt.subplots()
+    for key, value in chemcv.items():
+
+        if max(value) - min(value) < threshold:
+            continue
+
+        if fixmin:
+            value -= min(value)
+            if fixmax:
+                value /= max(value)
+        elif fixmax:
+            value -= max(value)
+
+        if isinstance(key, tuple):
+            label = '.'.join(key)
+        else:
+            label = key
+            
+        ax.plot(value, label=label)
+    
+    ax.set_xlabel("number of frame")
+    ax.set_ylabel("p [%]")
+    if legend: ax.legend()
+
+    fig.savefig("trj_chemcv_populations.svg")
+    plt.close()
+
+def trj_chemcv_energies(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 1, legend: bool = True) -> None:
+    fig, ax = plt.subplots()
+    for key, value in chemcv.items():
+
+        if max(value) - min(value) < threshold:
+            continue
+
+        if fixmin:
+            value -= min(value)
+            if fixmax:
+                value /= max(value)
+        elif fixmax:
+            value -= max(value)
+
+        if isinstance(key, tuple):
+            label = '.'.join(key)
+        else:
+            label = key
+            
+        ax.plot(value, label=label)
+    
+    ax.set_xlabel("number of frame")
+    ax.set_ylabel("E [eV]")
+    if legend: ax.legend()
+
+    fig.savefig("trj_chemcv_energies.svg")
+    plt.close()
 
 def pred(ref, pred):
     fig, ax = plt.subplots()

@@ -130,14 +130,44 @@ class _Node:
     # Serialisation helpers
     # ------------------------------------------------------------------
 
-    def to_dict(self) -> dict:
+    def to_nested_dict(self) -> dict:
         out = {}
         for key, child in self._children.items():
             if isinstance(child, np.ndarray):
                 out[key] = child.tolist()
             else:
-                out[key] = child.to_dict()
+                out[key] = child.to_nested_dict()
         return out
+    
+    def to_dict(self) -> dict["str | int | tuple", np.ndarray]:
+        dict = {}
+        leaves = list(self.leaves())
+        for path, array in leaves:
+            key = '.'.join(path)
+            dict[key] = array
+        return dict
+        
+    
+    def to_numpy(self, dtype: type = float) -> tuple[np.ndarray, list[tuple[str, ...]]]:
+        """
+        Return ``matrix`` with shape ``(n_leaves, array_size)``
+
+        Raises ``ValueError`` if leaf arrays have inconsistent lengths.
+        """
+        leaves = list(self.leaves())
+        if not leaves:
+            return np.empty((0, 0), dtype=dtype), []
+
+        _, arrays = zip(*leaves)
+        lengths = {len(a) for a in arrays}
+        if len(lengths) > 1:
+            raise ValueError(
+                f"Leaf arrays have inconsistent lengths: {lengths}. "
+                "This should not happen under normal usage; "
+                "check that all leaves were updated the same number of times."
+            )
+        matrix = np.vstack([a[np.newaxis, :] for a in arrays]).astype(dtype)
+        return matrix
 
     @classmethod
     def from_dict(cls, d: dict) -> "_Node":
@@ -238,6 +268,7 @@ class TreeFrame:
         self._root: _Node = _Node()
         self._step_count: int = 0         # number of steps written so far
         self._overflow_warned: bool = False  # overflow warning emitted at most once
+        self._metadata: dict = {}  # Store arbitrary metadata
 
     # ------------------------------------------------------------------
     # Direct dict-style access
@@ -374,30 +405,14 @@ class TreeFrame:
             self._step_count += 1
         
     # ------------------------------------------------------------------
-    # Numpy export
+    # Exports
     # ------------------------------------------------------------------
 
+    def to_dict(self) -> dict:
+        return _Node.to_dict(self._root)
+
     def to_numpy(self, dtype: type = float) -> tuple[np.ndarray, list[tuple[str, ...]]]:
-        """
-        Return ``(matrix, labels)`` where *matrix* has shape
-        ``(n_leaves, array_size)`` and *labels* is a list of path tuples.
-
-        Raises ``ValueError`` if leaf arrays have inconsistent lengths.
-        """
-        leaves = list(self._root.leaves())
-        if not leaves:
-            return np.empty((0, 0), dtype=dtype), []
-
-        paths, arrays = zip(*leaves)
-        lengths = {len(a) for a in arrays}
-        if len(lengths) > 1:
-            raise ValueError(
-                f"Leaf arrays have inconsistent lengths: {lengths}. "
-                "This should not happen under normal usage; "
-                "check that all leaves were updated the same number of times."
-            )
-        matrix = np.vstack([a[np.newaxis, :] for a in arrays]).astype(dtype)
-        return matrix, list(paths)
+        return _Node.to_numpy(self._root, dtype)
 
     # ------------------------------------------------------------------
     # Save - JSON (human-readable)
@@ -410,8 +425,9 @@ class TreeFrame:
                 "array_size":     self.array_size,
                 "fill_incomplete": self.fill_incomplete,
                 "step_count":     self._step_count,
+                **self._metadata,  # Include any custom metadata
             },
-            "data": self._root.to_dict(),
+            "data": self._root.to_nested_dict(),
         }
         Path(path).write_text(json.dumps(payload, indent=2))
 
@@ -441,12 +457,13 @@ class TreeFrame:
             )
 
         target_size = new_array_size if new_array_size is not None else stored_size
-        tf = cls(
-            array_size=target_size,
-            fill_incomplete=meta.get("fill_incomplete", "zeros"),
-        )
+        tf = cls(array_size=target_size, fill_incomplete=meta.get("fill_incomplete", "zeros"))
         tf._root = _Node.from_dict(payload["data"])
         tf._step_count = meta.get("step_count", 0)
+
+        # Restore custom metadata (everything except reserved keys)
+        reserved = {"array_size", "fill_incomplete", "step_count"}
+        tf._metadata = {k: v for k, v in meta.items() if k not in reserved}
 
         if new_array_size is not None and new_array_size > stored_size:
             _pad_all_leaves(tf._root, new_array_size)
@@ -473,10 +490,11 @@ class TreeFrame:
             f.attrs["array_size"]     = self.array_size
             f.attrs["fill_incomplete"] = self.fill_incomplete
             f.attrs["step_count"]     = self._step_count
+            if self._metadata:
+                f.attrs["_metadata_json"] = json.dumps(self._metadata)
             for path_tuple, arr in self._root.leaves():
-                f.create_dataset(
-                    "/" + "/".join(path_tuple), data=arr, compression="gzip"
-                )
+                path_tuple = [str(path_key) for path_key in path_tuple]
+                f.create_dataset("/" + "/".join(path_tuple), data=arr, compression="gzip")
 
     # ------------------------------------------------------------------
     # Load - HDF5
@@ -512,6 +530,9 @@ class TreeFrame:
             target_size = new_array_size if new_array_size is not None else stored_size
             tf = cls(array_size=target_size, fill_incomplete=fill_incomplete)
             tf._step_count = step_count
+
+            if "_metadata_json" in f.attrs:
+                tf._metadata = json.loads(str(f.attrs["_metadata_json"]))
 
             def _visit(hdf5_name: str, obj) -> None:
                 if not isinstance(obj, h5py.Dataset):
@@ -550,11 +571,11 @@ class TreeFrame:
             connector = "└── " if i == len(children) - 1 else "├── "
             if isinstance(child, np.ndarray):
                 if self.array_size >2:
-                    lines.append(f"{prefix}{connector}{key!r}  [{child[0]:f}, {child[1]:f}, {child[2]:f}, ...]")
+                    lines.append(f"{prefix}{connector}{key}  [{child[0]:f}, {child[1]:f}, {child[2]:f}, ...]")
                 else:
-                    lines.append(f"{prefix}{connector}{key!r}  {child}")
+                    lines.append(f"{prefix}{connector}{key}  {child}")
             else:
-                lines.append(f"{prefix}{connector}{key!r}")
+                lines.append(f"{prefix}{connector}{key}")
                 extension = "    " if i == len(children) - 1 else "│   "
                 self._summarise_node(child, lines, prefix + extension, i == len(children) - 1)
 
@@ -579,10 +600,9 @@ if __name__ == "__main__":
 
     print(tf.summary())
 
-    arr, labels = tf.to_numpy()
+    arr = tf.to_numpy()
     print(f"to_numpy -> shape {arr.shape}")
-    for row, label in zip(arr, labels):
-        print(f"{label}: {np.round(row, 3)}")
+    print(arr)
 
     # ------------------------------------------------------------------
     print(f"\n{sep}")

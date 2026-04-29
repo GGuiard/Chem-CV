@@ -1,7 +1,8 @@
-from TreeFrame import TreeFrame
-from orca_utils import *
+from .TreeFrame import TreeFrame
+from .orca_utils import *
 
 from typing import List, Tuple, Optional
+from pathlib import Path
 
 def nest_tuple_dict(d: dict) -> dict:
     """
@@ -101,3 +102,40 @@ class ChemCV(TreeFrame):
                 print(f"Warning: Could not extract {chemcv}: {e}")
 
         super().update(data, step)
+
+    def save(self, format: str = "hdf5", path: str | Path = "CHEMCV") -> None:
+        self._metadata["active_chemcvs"] = self.active_chemcvs
+        if format == "json":
+            super().save_json(path)
+        elif format == "hdf5":
+            super().save_hdf5(path)
+        else:
+            raise ValueError("format must be 'json' or 'hdf5'")
+    
+    @classmethod
+    def load(cls, format: str = "hdf5", path: str | Path = "CHEMCV", add_nb_traj: int | None = None, chemcvs: Optional[List[str]] = None) -> "ChemCV":
+        if format == "auto":
+            for fmt in ["json", "hdf5"]:
+                try:
+                    if fmt == "json":
+                        tf = TreeFrame.load_json(path, add_nb_traj)
+                    elif fmt == "hdf5":
+                        tf = TreeFrame.load_hdf5(path, add_nb_traj)
+                    break
+                except Exception:
+                    continue          
+        elif format == "json":
+            tf = TreeFrame.load_json(path, add_nb_traj)
+        elif format == "hdf5":
+            tf = TreeFrame.load_hdf5(path, add_nb_traj)
+        else:
+            raise ValueError("format must be 'json', 'hdf5' or 'auto'")
+        
+        # Restore as ChemCV
+        if not chemcvs:
+            chemcvs = tf._metadata.get("active_chemcvs")
+        chemcv = cls(chemcvs=chemcvs, nb_traj=tf.array_size, fill_incomplete=tf.fill_incomplete)
+        chemcv._root = tf._root
+        chemcv._step_count = tf._step_count
+        
+        return chemcv

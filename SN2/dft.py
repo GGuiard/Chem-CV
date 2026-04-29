@@ -1,5 +1,5 @@
 import os
-os.chdir("SN2")
+os.chdir("SN2/TRAJ")
 
 from ase.io import read
 from ase.calculators.orca import ORCA
@@ -8,12 +8,11 @@ from rich.progress import Progress
 import subprocess
 from orca_parser import ChemCV
 
-traj = read("init.xyz", ':')
+traj = read("traj.xyz", ':')
 
 nb_traj = len(traj)
-nb_atoms = len(traj[0])
 
-chemcv = ChemCV(nb_traj, nb_atoms)
+chemcv = ChemCV(nb_traj=nb_traj)
 simpleinput, blocks = chemcv.get_orca_input()
 
 progress = Progress()
@@ -30,4 +29,5 @@ for i, atoms in enumerate(traj):
     progress.update(task, advance=1)
 progress.stop()
 
-chemcv.save()
+print(chemcv.summary())
+chemcv.save_hdf5("CHEMCV")

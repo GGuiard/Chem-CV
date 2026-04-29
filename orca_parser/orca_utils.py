@@ -11,6 +11,7 @@ def orca_property(path: str = "ORCA") -> json:
         orca_property = json.load(f)
     return orca_property
 
+# useful ?
 def orca_gbw(path: str = "ORCA") -> json:
     subprocess.run(f"orca_2json {path}/orca.gbw", shell=True, stdout=subprocess.DEVNULL)
     with open(f"{path}/orca.json", 'r') as f:
@@ -324,6 +325,24 @@ def q_RESP(output_text: str) -> dict:
     
     return charges
 
+def E_MO(output_text: str) -> dict:
+    pattern = r"ORBITAL ENERGIES(?:.*\n){4}([\s\S]*?)\n.*\n\n"
+    match = re.search(pattern, output_text)
+    
+    if not match:
+        raise ValueError("ORBITAL ENERGIES")
+    
+    section = match.group(1)
+    energies = {}
+    
+    for line in section.split('\n'):
+            parts = line.split()
+
+            atom_index = int(parts[0])
+            energies[atom_index] = float(parts[3])
+    
+    return energies
+
 ### Dictionnary of the available ChemCV ###
 
 AVAILABLE_CHEMCVS = {
@@ -429,6 +448,12 @@ AVAILABLE_CHEMCVS = {
         "source": orca_out,
         "parsingfunction": q_RESP
         },
+    "E_MO": {
+        "simpleinput": "",
+        "block": "",
+        "source": orca_out,
+        "parsingfunction": E_MO
+        },
     }
 
 # ---------------------------------------------------------------------------
@@ -480,3 +505,4 @@ if __name__ == "__main__":
     print("p_AtMO_Loewdin:", p_AtMO_Loewdin(output), '\n')
     print("p_OrbMO_Loewdin:", p_OrbMO_Loewdin(output), '\n')
     print("q_RESP:", q_RESP(output), '\n')
+    print("E_MO:", E_MO(output), '\n')
