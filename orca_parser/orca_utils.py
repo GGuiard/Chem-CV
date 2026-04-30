@@ -46,52 +46,56 @@ def get_ao_key(ao_str: str) -> Tuple[int, str, str]:
     
     return (n, l, m)
 
-def sort_ao(dict: dict, reduction_order: str, key_start: int = 0) -> dict:
-    l_map = {'s': 0, 'p': 1, 'd': 2, 'f': 3}
-    m_map = {'s': {'': 0},
-             'p': {'x': 0, 'y': 1, 'z': 2},
-             'd': {'xy': 0, 'xz': 1, 'yz': 2, 'x2y2': 3, 'z2': 4},
-             'f': {'-3': 0, '-2': 1, '-1': 2, '0': 3, '+1': 4, '+2': 5, '+3': 6}}
-    if reduction_order == 'a':
-        return {key: value for key, value in sorted(dict.items())}
-    elif reduction_order == 'an':
-        return {key: value for key, value in sorted(dict.items())}
-    elif reduction_order == 'anl':
-        return {key: value for key, value in sorted(dict.items(), key=lambda x: tuple(x[0][:key_start]) + (x[0][key_start+0], x[0][key_start+1], l_map[x[0][key_start+2]]))}
-    elif reduction_order == 'al':
-        return {key: value for key, value in sorted(dict.items(), key=lambda x: tuple(x[0][:key_start]) + (x[0][key_start+0], l_map[x[0][key_start+1]]))}
-    else:
-        return {key: value for key, value in sorted(dict.items(), key=lambda x: tuple(x[0][:key_start]) + (x[0][key_start+0], x[0][key_start+1], l_map[x[0][key_start+2]], m_map[x[0][key_start+2]][x[0][key_start+3]]))}
+def is_in_list_tuples(tuple: tuple[int|str|None], list_tuples: list[tuple[int|str|None]]) -> bool:
+    for test_tuple in list_tuples:
+        is_in = True
+        for value, test_value in zip(tuple, test_tuple):
+            if value!=None and test_value!=None:
+                if value != test_value:
+                    is_in = False
+                    break
+        if is_in:
+            return True
+    return False
 
-def reduce_ao(dict: dict, reduction_order: str, key_start: int = 0) -> dict:
+def sort(dict: dict, fmt: list[str]) -> dict:
+    l_map = {'s': 0, 'p': 1, 'd': 2, 'f': 3}
+    m_map = {'': 0,
+             'x': 1, 'y': 2, 'z': 3,
+             'xy': 4, 'xz': 5, 'yz': 6, 'x2y2': 7, 'z2': 8,
+             '-3': 9, '-2': 10, '-1': 11, '0': 12, '+1': 13, '+2': 14, '+3': 15}
+    
+    sort_functions = []
+    for key_type in fmt:
+        if key_type == 'l':
+            sort_functions.append(lambda x: l_map[x])
+        elif key_type == 'm':
+            sort_functions.append(lambda x: m_map[x])
+        else:
+            sort_functions.append(lambda x: x)
+    func = lambda item: tuple([f(x) for f, x in zip(sort_functions, item[0])])
+    
+    return {key: value for key, value in sorted(dict.items(), key=func)}
+    
+def reduce(dict: dict, new_format: list[str], old_format: list[str]) -> dict:
     reduced_dict = {}
-    for key, value in dict.items():
-        header = tuple(key[:key_start])
-        a, n, l, _ = key[key_start:]
-        if reduction_order == 'a':
-            if key_start == 0:
-                reduced_key = a
-            else:
-                reduced_key = header + tuple([a])
-        elif reduction_order == 'an':
-            reduced_key = header + (a, n)
-        elif reduction_order == 'anl':
-            reduced_key = header + (a, n, l)
-        elif reduction_order == 'al':
-            reduced_key = header + (a, l)
-        if reduced_key not in reduced_dict:
-            reduced_dict[reduced_key] = 0.0
-        reduced_dict[reduced_key] += value
+    for tuple_key, value in dict.items():
+        reduced_tuple_key = tuple([tuple_key[old_format.index(key)] for key in new_format])
+        if reduced_tuple_key not in reduced_dict:
+            reduced_dict[reduced_tuple_key] = 0.0
+        reduced_dict[reduced_tuple_key] += value
     return reduced_dict
 
 ### Parsing Functions ###
 
-def q_Mulliken(properties: json) -> dict:
+def q_Mulliken(properties: json, atoms: list[int] | None = None) -> dict:
     q_list = properties["Geometries"][0]["Mulliken_Population_Analysis"][0]["AtomicCharges"]
-    q_dict = {i: q[0] for i, q in enumerate(q_list)}
+    q_dict = {atom: q[0] for atom, q in enumerate(q_list)}
+    if atoms:
+        q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def q_Orb_Mulliken(output_text: str) -> dict:
+def q_AO_Mulliken(output_text: str, aos: list[tuple[int|str|None]] = [(None, None, None, None)], fmt: list[str] = ["atom", "n", "l", "m"]) -> dict:
     pattern = r"MULLIKEN ORBITAL CHARGES.*?\n.*?\n.*?\n(.*?)(?:\nSum of orbital charges)"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -104,18 +108,20 @@ def q_Orb_Mulliken(output_text: str) -> dict:
     for line in section.split('\n'):
         parts = line.split()
 
-        atom_index = get_atom_index(parts[1])
-        n, l, m = get_ao_key(parts[2])
+        ao = (get_atom_index(parts[1]),) + get_ao_key(parts[2])
         charge = float(parts[3])
 
-        charges[(atom_index, n, l, m)] = charge
+        if is_in_list_tuples(ao, aos):
+            charges[ao] = charge
 
-    charges = reduce_ao(charges, 'anl')
-    charges = sort_ao(charges, 'anl')
+    default_format = ["atom", "n", "l", "m"]
+    if fmt != default_format:
+        charges = reduce(charges, fmt, default_format)
+    charges = sort(charges, fmt)
 
     return charges
 
-def p_AtMO_Mulliken(output_text: str) -> dict:
+def p_MOAt_Mulliken(output_text: str, moats: list[tuple[int|None]] = [(None, None)], fmt: list[str] = ["MO", "atom"], threshold: float = 0.1) -> dict:
     pattern = r"MULLIKEN ATOM POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -135,15 +141,22 @@ def p_AtMO_Mulliken(output_text: str) -> dict:
         for line in lines[4:]:
             parts = line.split()
 
-            atom_index, atom_populations = int(parts[0]), [float(population) for population in parts[2:]]
+            atom = int(parts[0])
+            atom_populations = [float(population) for population in parts[2:]]
 
-            for mo_index, population in zip(mo_indices, atom_populations):
-                if mo_index < 33:
-                    populations[(mo_index, atom_index)] = population
+            for mo, population in zip(mo_indices, atom_populations):
+                moat = (mo, atom)
+                if is_in_list_tuples(moat, moats) and threshold <= population:
+                    populations[moat] = population
+
+    default_format = ["MO", "atom"]
+    if fmt != default_format:
+        populations = reduce(populations, fmt, default_format)
+    populations = sort(populations, fmt)
     
     return populations
 
-def p_OrbMO_Mulliken(output_text: str) -> dict:
+def p_MOAO_Mulliken(output_text: str, moaos: list[tuple[int|str|None]] = [(None, None, None, None, None)], fmt: list[str] = ["MO", "atom", "n", "l", "m"], threshold: float = 0.1) -> dict:
     pattern = r"MULLIKEN ORBITAL POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -163,25 +176,29 @@ def p_OrbMO_Mulliken(output_text: str) -> dict:
         for line in lines[4:]:
             parts = line.split()
 
-            atom_index = get_atom_index(parts[0])
-            n, l, m = get_ao_key(parts[1])
-            orbital_populations = parts[2:]
+            ao = (get_atom_index(parts[0]),) + get_ao_key(parts[1])
+            ao_populations = [float(ao_population) for ao_population in parts[2:]]
 
-            for mo_index, pop in zip(mo_indices, orbital_populations):
-                if mo_index < 33:
-                    populations[(mo_index, atom_index, n, l, m)] = float(pop)
+            for mo, population in zip(mo_indices, ao_populations):
+                moao = (mo,) + ao
+                if is_in_list_tuples(moao, moaos) and threshold <= population:
+                    populations[moao] = population
 
-    populations = reduce_ao(populations, 'al', 1)
-    populations = sort_ao(populations, 'al', 1)
+    default_format = ["MO", "atom", "n", "l", "m"]
+    if fmt != default_format:
+        populations = reduce(populations, fmt, default_format)
+    populations = sort(populations, fmt)
 
     return populations
 
-def q_Loewdin(properties: json) -> dict:
+def q_Loewdin(properties: json, atoms: list[int] | None = None) -> dict:
     q_list = properties["Geometries"][0]["Loewdin_Population_Analysis"][0]["AtomicCharges"]
     q_dict = {i: q[0] for i, q in enumerate(q_list)}
+    if atoms:
+        q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def q_Orb_Loewdin(output_text: str) -> dict:
+def q_AO_Loewdin(output_text: str, aos: list[tuple[int|str|None]] = [(None, None, None, None)], fmt: list[str] = ["atom", "n", "l", "m"]) -> dict:
     pattern = r"LOEWDIN ORBITAL CHARGES.*?\n.*?\n(.*?)(?:\n\n)"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -194,18 +211,20 @@ def q_Orb_Loewdin(output_text: str) -> dict:
     for line in section.split('\n'):
         parts = line.split()
 
-        atom_index = get_atom_index(parts[1])
-        n, l, m = get_ao_key(parts[2])
+        ao = (get_atom_index(parts[1]),) + get_ao_key(parts[2])
         charge = float(parts[3])
 
-        charges[(atom_index, n, l, m)] = charge
+        if is_in_list_tuples(ao, aos):
+            charges[ao] = charge
 
-    charges = reduce_ao(charges, 'anl')
-    charges = sort_ao(charges, 'anl')
+    default_format = ["atom", "n", "l", "m"]
+    if fmt != default_format:
+        charges = reduce(charges, fmt, default_format)
+    charges = sort(charges, fmt)
 
     return charges
 
-def p_AtMO_Loewdin(output_text: str) -> dict:
+def p_MOAt_Loewdin(output_text: str, moats: list[tuple[int|None]] = [(None, None)], fmt: list[str] = ["MO", "atom"], threshold: float = 0.1) -> dict:
     pattern = r"LOEWDIN ATOM POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -225,15 +244,22 @@ def p_AtMO_Loewdin(output_text: str) -> dict:
         for line in lines[4:]:
             parts = line.split()
 
-            atom_index, atom_populations = int(parts[0]), [float(population) for population in parts[2:]]
+            atom = int(parts[0])
+            atom_populations = [float(population) for population in parts[2:]]
 
-            for mo_index, population in zip(mo_indices, atom_populations):
-                if mo_index < 33:
-                    populations[(mo_index, atom_index)] = population
+            for mo, population in zip(mo_indices, atom_populations):
+                moat = (mo, atom)
+                if is_in_list_tuples(moat, moats) and threshold <= population:
+                    populations[moat] = population
+
+    default_format = ["MO", "atom"]
+    if fmt != default_format:
+        populations = reduce(populations, fmt, default_format)
+    populations = sort(populations, fmt)
     
     return populations
 
-def p_OrbMO_Loewdin(output_text: str) -> dict:
+def p_MOAO_Loewdin(output_text: str, moaos: list[tuple[int|str|None]] = [(None, None, None, None, None)], fmt: list[str] = ["MO", "atom", "n", "l", "m"], threshold: float = 0.1) -> dict:
     pattern = r"LOEWDIN ORBITAL POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -253,61 +279,79 @@ def p_OrbMO_Loewdin(output_text: str) -> dict:
         for line in lines[4:]:
             parts = line.split()
 
-            atom_index = get_atom_index(parts[0])
-            n, l, m = get_ao_key(parts[1])
-            orbital_populations = parts[2:]
+            ao = (get_atom_index(parts[0]),) + get_ao_key(parts[1])
+            ao_populations = [float(ao_population) for ao_population in parts[2:]]
 
-            for mo_index, pop in zip(mo_indices, orbital_populations):
-                if mo_index < 33:
-                    populations[(mo_index, atom_index, n, l, m)] = float(pop)
+            for mo, population in zip(mo_indices, ao_populations):
+                moao = (mo,) + ao
+                if is_in_list_tuples(moao, moaos) and threshold <= population:
+                    populations[moao] = population
 
-    populations = reduce_ao(populations, 'al', 1)
-    populations = sort_ao(populations, 'al', 1)
+    default_format = ["MO", "atom", "n", "l", "m"]
+    if fmt != default_format:
+        populations = reduce(populations, fmt, default_format)
+    populations = sort(populations, fmt)
 
     return populations
 
-def q_Mayer(properties: json) -> dict:
+def q_Mayer(properties: json, atoms: list[int] | None = None) -> dict:
     q_list = properties["Geometries"][0]["Mayer_Population_Analysis"][0]["QA"]
-    q_dict = {i: q[0] for i, q in enumerate(q_list)}
+    q_dict = {atom: q[0] for atom, q in enumerate(q_list)}
+    if atoms:
+        q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def v_Mayer(properties: json) -> dict:
+def v_Mayer(properties: json, atoms: list[int] | None = None) -> dict:
     v_list = properties["Geometries"][0]["Mayer_Population_Analysis"][0]["VA"]
-    v_dict = {i: v[0] for i, v in enumerate(v_list)}
+    v_dict = {atom: v[0] for atom, v in enumerate(v_list)}
+    if atoms:
+        v_dict = {atom: v for atom, v in v_dict.items() if atom in atoms}
     return v_dict
 
-def b_Mayer(properties: json) -> dict:
+def b_Mayer(properties: json, atoms: list[int] | None = None) -> dict:
     b_list = properties["Geometries"][0]["Mayer_Population_Analysis"][0]["BondOrders"]
     components_list = properties["Geometries"][0]["Mayer_Population_Analysis"][0]["components"]
     b_dict = {(component[0], component[2]): b[0] for component, b in zip(components_list, b_list)}
+    if atoms:
+        b_dict = {atom_tuple: b for atom_tuple, b in b_dict.items() if (atom_tuple[0] in atoms) and (atom_tuple[1] in atoms)}
     return b_dict
 
-def q_Hirshfeld(properties: json) -> dict:
+def q_Hirshfeld(properties: json, atoms: list[int] | None = None) -> dict:
     q_list = properties["Geometries"][0]["Hirshfeld_Population_Analysis"][0]["AtomicCharges"]
-    q_dict = {i: q[0] for i, q in enumerate(q_list)}
+    q_dict = {atom: q[0] for atom, q in enumerate(q_list)}
+    if atoms:
+        q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def q_MBIS(properties: json) -> dict:
+def q_MBIS(properties: json, atoms: list[int] | None = None) -> dict:
     q_list = properties["Geometries"][0]["MBIS_Population_Analysis"][0]["AtomicCharges"]
-    q_dict = {i: q[0] for i, q in enumerate(q_list)}
+    q_dict = {atom: q[0] for atom, q in enumerate(q_list)}
+    if atoms:
+        q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def npop_MBIS(properties: json) -> dict:
+def npop_MBIS(properties: json, atoms: list[int] | None = None) -> dict:
     npop_list = properties["Geometries"][0]["MBIS_Population_Analysis"][0]["NPOPVAL"]
-    npop_dict = {i: npop[0] for i, npop in enumerate(npop_list)}
+    npop_dict = {atom: npop[0] for atom, npop in enumerate(npop_list)}
+    if atoms:
+        npop_dict = {atom: npop for atom, npop in npop_dict.items() if atom in atoms}
     return npop_dict
 
-def sigma_MBIS(properties: json) -> dict:
+def sigma_MBIS(properties: json, atoms: list[int] | None = None) -> dict:
     sigma_list = properties["Geometries"][0]["MBIS_Population_Analysis"][0]["SIGMAVAL"]
-    sigma_dict = {i: sigma[0] for i, sigma in enumerate(sigma_list)}
+    sigma_dict = {atom: sigma[0] for atom, sigma in enumerate(sigma_list)}
+    if atoms:
+        sigma_dict = {atom: sigma for atom, sigma in sigma_dict.items() if atom in atoms}
     return sigma_dict
 
-def q_CHELPG(properties: json) -> dict:
+def q_CHELPG(properties: json, atoms: list[int] | None = None) -> dict:
     q_list = properties["Geometries"][0]["CHELPG_Population_Analysis"][0]["AtomicCharges"]
-    q_dict = {i: q[0] for i, q in enumerate(q_list)}
+    q_dict = {atom: q[0] for atom, q in enumerate(q_list)}
+    if atoms:
+        q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def q_RESP(output_text: str) -> dict:
+def q_RESP(output_text: str, atoms: list[int] | None = None) -> dict:
     pattern = r"RESP Charges.*\n-*?\n(.*?)(?:\n-*?\nTotal charge:)"
     match = re.search(pattern, output_text, re.DOTALL)
     
@@ -318,14 +362,17 @@ def q_RESP(output_text: str) -> dict:
     charges = {}
     
     for line in section.split('\n'):
-            parts = line.split()
+        parts = line.split()
 
-            atom_index = int(parts[0])
-            charges[atom_index] = float(parts[3])
+        atom = int(parts[0])
+        if atoms:
+            if atom not in atoms:
+                continue
+        charges[atom] = float(parts[3])
     
     return charges
 
-def E_MO(output_text: str) -> dict:
+def E_MO(output_text: str, mos: list[int] | None = None) -> dict:
     pattern = r"ORBITAL ENERGIES(?:.*\n){4}([\s\S]*?)\n.*\n\n"
     match = re.search(pattern, output_text)
     
@@ -338,8 +385,11 @@ def E_MO(output_text: str) -> dict:
     for line in section.split('\n'):
             parts = line.split()
 
-            atom_index = int(parts[0])
-            energies[atom_index] = float(parts[3])
+            mo = int(parts[0])
+            if mos:
+                if mo not in mos:
+                    continue
+            energies[mo] = float(parts[3])
     
     return energies
 
@@ -352,23 +402,23 @@ AVAILABLE_CHEMCVS = {
         "source": orca_property,
         "parsingfunction": q_Mulliken
         },
-    "q_Orb_Mulliken": {
+    "q_AO_Mulliken": {
         "simpleinput": "MULLIKEN",
         "block": "%output Print[ P_OrbCharges_M ] 1 end",
         "source": orca_out,
-        "parsingfunction": q_Orb_Mulliken
+        "parsingfunction": q_AO_Mulliken
         },
-    "p_AtMO_Mulliken": {
+    "p_MOAt_Mulliken": {
         "simpleinput": "MULLIKEN",
         "block": "%output Print[ P_AtPopMO_M ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_AtMO_Mulliken
+        "parsingfunction": p_MOAt_Mulliken
         },
-    "p_OrbMO_Mulliken": {
+    "p_MOAO_Mulliken": {
         "simpleinput": "MULLIKEN",
         "block": "%output Print[ P_OrbPopMO_M ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_OrbMO_Mulliken
+        "parsingfunction": p_MOAO_Mulliken
         },
     "q_Loewdin": {
         "simpleinput": "LOEWDIN",
@@ -376,23 +426,23 @@ AVAILABLE_CHEMCVS = {
         "source": orca_property,
         "parsingfunction": q_Loewdin
         },
-    "q_Orb_Loewdin": {
+    "q_AO_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "%output Print[ P_OrbCharges_L ] 1 end",
         "source": orca_out,
-        "parsingfunction": q_Orb_Loewdin
+        "parsingfunction": q_AO_Loewdin
         },
-    "p_AtMO_Loewdin": {
+    "p_MOAt_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "%output Print[ P_AtPopMO_L ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_AtMO_Loewdin
+        "parsingfunction": p_MOAt_Loewdin
         },
-    "p_OrbMO_Loewdin": {
+    "p_MOAO_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "%output Print[ P_OrbPopMO_L ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_OrbMO_Loewdin
+        "parsingfunction": p_MOAO_Loewdin
         },
     "q_Mayer": {
         "simpleinput": "MAYER",
@@ -408,7 +458,7 @@ AVAILABLE_CHEMCVS = {
         },
     "b_Mayer": {
         "simpleinput": "MAYER",
-        "block": "%method MAYER_BONDORDERTHRESH 0.00 end",
+        "block": "",
         "source": orca_property,
         "parsingfunction": b_Mayer
         },
@@ -482,27 +532,27 @@ if __name__ == "__main__":
     print("2. Property chemcv")
     print(sep, '\n')
 
-    print("q_Mulliken:", q_Mulliken(property), '\n')
-    print("q_Loewdin:", q_Loewdin(property), '\n')
-    print("q_Mayer:", q_Mayer(property), '\n')
-    print("v_Mayer:", v_Mayer(property), '\n')
-    print("b_Mayer:", b_Mayer(property), '\n')
-    print("q_Hirshfeld:", q_Hirshfeld(property), '\n')
-    print("q_MBIS:", q_MBIS(property), '\n')
-    print("npop_MBIS:", npop_MBIS(property), '\n')
-    print("sigma_MBIS:", sigma_MBIS(property), '\n')
-    print("q_CHELPG:", q_CHELPG(property), '\n')
+    print("q_Mulliken:", q_Mulliken(property, atoms=[0,1,5]), '\n')
+    print("q_Loewdin:", q_Loewdin(property, atoms=[0,1,5]), '\n')
+    print("q_Mayer:", q_Mayer(property, atoms=[0,1,5]), '\n')
+    print("v_Mayer:", v_Mayer(property, atoms=[0,1,5]), '\n')
+    print("b_Mayer:", b_Mayer(property, atoms=[0,1,5]), '\n')
+    print("q_Hirshfeld:", q_Hirshfeld(property, atoms=[0,1,5]), '\n')
+    print("q_MBIS:", q_MBIS(property, atoms=[0,1,5]), '\n')
+    print("npop_MBIS:", npop_MBIS(property, atoms=[0,1,5]), '\n')
+    print("sigma_MBIS:", sigma_MBIS(property, atoms=[0,1,5]), '\n')
+    print("q_CHELPG:", q_CHELPG(property, atoms=[0,1,5]), '\n')
 
     # ------------------------------------------------------------------
     print('\n', sep)
     print("2. Output chemcv")
     print(sep, '\n')
 
-    print("q_Orb_Mulliken:", q_Orb_Mulliken(output), '\n')
-    print("p_AtMO_Mulliken:", p_AtMO_Mulliken(output), '\n')
-    print("p_OrbMO_Mulliken:", p_OrbMO_Mulliken(output), '\n')
-    print("q_Orb_Loewdin:", q_Orb_Loewdin(output), '\n')
-    print("p_AtMO_Loewdin:", p_AtMO_Loewdin(output), '\n')
-    print("p_OrbMO_Loewdin:", p_OrbMO_Loewdin(output), '\n')
-    print("q_RESP:", q_RESP(output), '\n')
-    print("E_MO:", E_MO(output), '\n')
+    print("q_AO_Mulliken:", q_AO_Mulliken(output, aos=[(0, None, None, None), (1, None, None, None), (5, None, None, None)], fmt=["atom", "l"]), '\n')
+    print("p_MOAt_Mulliken:", p_MOAt_Mulliken(output, moats=[(21, 0), (21, 1), (21, 5), (22, 0), (22, 1), (22, 5)]), '\n')
+    print("p_MOAO_Mulliken:", p_MOAO_Mulliken(output, moaos=[(21, 0, None, None, None), (21, 1, None, None, None), (21, 5, None, None, None), (22, 0, None, None, None), (22, 1, None, None, None), (22, 5, None, None, None)], fmt=["MO", "atom", "l"]), '\n')
+    print("q_AO_Loewdin:", q_AO_Loewdin(output, aos=[(0, None, None, None), (1, None, None, None), (5, None, None, None)], fmt=["atom", "l"]), '\n')
+    print("p_MOAt_Loewdin:", p_MOAt_Loewdin(output, moats=[(21, 0), (21, 1), (21, 5), (22, 0), (22, 1), (22, 5)]), '\n')
+    print("p_MOAO_Loewdin:", p_MOAO_Loewdin(output, moaos=[(21, 0, None, None, None), (21, 1, None, None, None), (21, 5, None, None, None), (22, 0, None, None, None), (22, 1, None, None, None), (22, 5, None, None, None)], fmt=["MO", "atom", "l"]), '\n')
+    print("q_RESP:", q_RESP(output, atoms=[0,1,5]), '\n')
+    print("E_MO:", E_MO(output, mos=[21,22]), '\n')

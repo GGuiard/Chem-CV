@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
 from chemiscope import write_input, all_atomic_environments
-from orca_parser import TreeFrame
-# from ase.data import covalent_radii, chemical_symbols
+from ase.data import covalent_radii, chemical_symbols
 
 def trj_E(Emec, av, std):
     fig, ax = plt.subplots(layout='tight')
@@ -230,7 +229,7 @@ def err_fes_2D(grid_d, err):
     fig.savefig("err_fer_2D.svg")
     plt.close()
 
-def chemiscope(structures, time, d1, d2):
+def chemiscope(structures, time, d1, d2, adapt_radius: bool = True):
     properties = {"d1": {"target": "structure",
                         "values": d1,
                         "description": "Distance between the carbon atom and the first chlorin atom"},
@@ -241,14 +240,6 @@ def chemiscope(structures, time, d1, d2):
                            "values": time,
                            "description": "time [ps]"}}
     
-    # atom_radius = []
-    # for atoms in structures:
-    #     for atom in atoms:
-    #         atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
-    # shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
-    # "shape": "selection"
-    # shapes=shapes
-
     settings = {"target": "structure",
                 "map": {"x": {"property": "d1"},
                         "y": {"property": "d2"},
@@ -258,9 +249,19 @@ def chemiscope(structures, time, d1, d2):
                                "keepOrientation": True,
                                "playbackDelay": 200}]}
     
-    write_input("chemiscope.json.gz", structures=structures, properties=properties, settings=settings)
+    if adapt_radius:
+        atom_radius = []
+        for atoms in structures:
+            for atom in atoms:
+                atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
+        shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
+        settings["shape"] = "selection"
+    else:
+        shapes = {}
+    
+    write_input("chemiscope.json.gz", structures=structures, properties=properties, shapes=shapes, settings=settings)
 
-def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
+def chemiscope_chemcv(structures, time, d1, d2, chemcv, color, adapt_radius: bool = True):
     properties = {"d1": {"target": "structure",
                         "values": d1,
                         "description": "Distance between the carbon atom and the first chlorin atom"},
@@ -277,6 +278,16 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
     for name, value in chemcv.items():
         properties[name] = {"target": "structure", "values": value}
 
+    if adapt_radius:
+        atom_radius = []
+        for atoms in structures:
+            for atom in atoms:
+                atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
+        shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
+        settings["shape"] = "selection"
+    else:
+        shapes = {}
+
     settings = {"target": "structure",
                 "map": {"x": {"property": "d1"},
                         "y": {"property": "d2"},
@@ -291,7 +302,7 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color):
 
     environments = all_atomic_environments(structures)
 
-    write_input("chemiscope_chemcv.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
+    write_input("chemiscope_chemcv.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
 
 def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixmax: bool = False, threshold: str = 0.0, legend: bool = True) -> None:
     fig, ax = plt.subplots()

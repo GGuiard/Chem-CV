@@ -68,9 +68,9 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### orca_parser
 
-- [ ] Add options to group together orbitals of same n and l or even of same n
+- [X] Add options to group together orbitals of same n and l or even of same n
 - [ ] Add possibility to choose options for chemcv (atoms, bonds, ao, mo...) globally and/or for each chemcv
-- [ ] Add threshold when relevant (p_AtMO), (like post-processing removal of zeros chemcvs)
+- [X] Add threshold when relevant (p_AtMO), (like post-processing removal of zeros chemcvs)
 - [ ] Add LED, NAO, NBO, ETS-NOCV, dot product HOMO/LUMO
 - [ ] Change regex to make it more readable
 - [ ] Change ChemCV so that it can be changed or copied in a way that adapt the active_chemcvs, their options, and the treeframe 
