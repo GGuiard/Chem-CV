@@ -11,8 +11,9 @@ bck.*
 *.ptc
 *.h5
 *.parquet
+/test.py
 __pycache__
-comments.dat
+comments.md
 lightning_logs
 mace-Fe111-charges.model
 ase/

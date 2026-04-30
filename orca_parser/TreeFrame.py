@@ -18,12 +18,12 @@ Concepts
 fill_incomplete behaviour (applied on every update)
 ----------------------------------------------------
 Leaf in TreeFrame but NOT in data
-  ``'zeros'`` → keep the leaf; that step stays zero. Nothing to do.
-  ``'drop'``  → drop the leaf (and any empty ancestor nodes). Warns.
+  ``'zeros'`` -> keep the leaf; that step stays zero. Nothing to do.
+  ``'drop'``  -> drop the leaf (and any empty ancestor nodes). Warns.
 
 Leaf in data but NOT in TreeFrame
-  ``'zeros'`` → create a zero-initialised leaf, write the value. Warns.
-  ``'drop'``  → ignore silently. Nothing to do.
+  ``'zeros'`` -> create a zero-initialised leaf, write the value. Warns.
+  ``'drop'``  -> ignore silently. Nothing to do.
 
 Quick example
 -------------
@@ -96,6 +96,11 @@ class _Node:
 
     def values(self):
         return self._children.values()
+    
+    def copy(self):
+        node = _Node()
+        node._children = self._children.copy()
+        return node
 
     # ------------------------------------------------------------------
     # Tree helpers
@@ -114,17 +119,8 @@ class _Node:
                 for sub_path, arr in child.leaves():
                     yield (key,) + sub_path, arr
 
-    def depth(self) -> int:
-        """Maximum depth below this node (0 if all children are arrays)."""
-        if not self._children:
-            return 0
-        depths = []
-        for child in self._children.values():
-            if isinstance(child, np.ndarray):
-                depths.append(0)
-            else:
-                depths.append(1 + child.depth())
-        return max(depths)
+    def n_leaves(self) -> int:
+        return sum(1 for _ in self.leaves())
 
     # ------------------------------------------------------------------
     # Serialisation helpers
@@ -147,7 +143,6 @@ class _Node:
             dict[key] = array
         return dict
         
-    
     def to_numpy(self, dtype: type = float) -> tuple[np.ndarray, list[tuple[str, ...]]]:
         """
         Return ``matrix`` with shape ``(n_leaves, array_size)``
@@ -178,6 +173,13 @@ class _Node:
             else:
                 node._children[key] = cls.from_dict(value)
         return node
+    
+    # ------------------------------------------------------------------
+    # Serialisation helpers
+    # ------------------------------------------------------------------
+
+    def __repr__(self):
+        return f"_Node(n_leaves={self.n_leaves()})"
 
 
 # ---------------------------------------------------------------------------
@@ -271,22 +273,140 @@ class TreeFrame:
         self._metadata: dict = {}  # Store arbitrary metadata
 
     # ------------------------------------------------------------------
+    # Convert _Node to TreeFrame
+    # ------------------------------------------------------------------
+
+    def _Node_to_TreeFrame(self, root: _Node) -> "TreeFrame":
+        tf = TreeFrame(self.array_size, self.fill_incomplete)
+        tf._root = root
+        tf._step_count = self._step_count
+        tf._metadata = self._metadata
+        return tf
+    
+    # ------------------------------------------------------------------
     # Direct dict-style access
     # ------------------------------------------------------------------
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: tuple | str | int | list | slice):
         """
-        Support both single-key and tuple-key access.
-
-        tf["a"]           → _Node or array
-        tf["a", "b", "c"] → _Node or array (equivalent to tf["a"]["b"]["c"])
+        Support single-key, tuple-key and complex access.
         """
-        if isinstance(key, tuple):
-            node = self._root
-            for k in key:
-                node = node[k]
-            return node
-        return self._root[key]
+        if not isinstance(key, tuple):
+            key = tuple([key])
+        children = self._root.copy()._children
+        for k in key:
+            new_children = {}
+            if isinstance(k, (str, int)):
+                for child_key, child in children.items():
+                    suffix = str(child_key).split('.')[-1]
+                    if str(k) == suffix:
+                        if isinstance(child, np.ndarray):
+                            new_children[child_key] = child.copy()
+                        else:
+                            for grandchild_key, grandchild in child.items():
+                                path = '.'.join([str(child_key), str(grandchild_key)])
+                                new_children[path] = grandchild.copy()
+            elif isinstance(k, (tuple, list)):
+                for kk in k:
+                    for child_key, child in children.items():
+                            suffix = str(child_key).split('.')[-1]
+                            if str(kk) == suffix:
+                                if isinstance(child, np.ndarray):
+                                    new_children[child_key] = child.copy()
+                                else:
+                                    for grandchild_key, grandchild in child.items():
+                                        path = '.'.join([str(child_key), str(grandchild_key)])
+                                        new_children[path] = grandchild.copy()
+            elif isinstance(k, slice):
+                start, stop = k.start, k.stop
+                for child_key, child in children.items():
+                        suffix = str(child_key).split('.')[-1]
+                        if not (start or stop):
+                            if isinstance(child, np.ndarray):
+                                new_children[child_key] = child.copy()
+                            else:
+                                for grandchild_key, grandchild in child.items():
+                                    path = '.'.join([str(child_key), str(grandchild_key)])
+                                    new_children[path] = grandchild.copy()
+                        else:
+                            try: suffix = int(suffix)
+                            except Exception: continue
+                            if not ((start and int(suffix)<start) or (stop and stop<int(suffix))):
+                                if isinstance(child, np.ndarray):
+                                    new_children[child_key] = child.copy()
+                                else:
+                                    for grandchild_key, grandchild in child.items():
+                                        path = '.'.join([str(child_key), str(grandchild_key)])
+                                        new_children[path] = grandchild.copy()
+            children = new_children
+        root = _Node()
+        root._children = children
+        tf = self._Node_to_TreeFrame(root)
+        return tf
+    
+        # if not isinstance(key, tuple):
+        #     key = tuple([key])
+        # root = self._root.copy()
+        # nodes = [root]
+        # for k in key:
+        #     new_nodes = []
+        #     if isinstance(k, (str, int)):
+        #         for node in nodes:
+        #             children = {}
+        #             if k in node.keys():
+        #                 children[k] = node[k].copy()
+        #                 new_nodes.append(children[k])
+        #             node._children = children
+        #     elif isinstance(k, (tuple, list)):
+        #         for node in nodes:
+        #             children = {}
+        #             for kk in k:
+        #                 if kk in node.keys():
+        #                     children[kk] = node[kk].copy()
+        #                     new_nodes.append(children[kk])
+        #             node._children = children
+        #     elif isinstance(k, slice):
+        #         start, stop = k.start, k.stop
+        #         for node in nodes:
+        #             children = {}
+        #             for node_key in node.keys():
+        #                 if not isinstance(node_key, int):
+        #                     continue
+        #                 if (start and node_key<start) or (stop and stop<node_key):
+        #                     continue
+        #                 children[node_key] = node[node_key].copy()
+        #                 new_nodes.append(children[node_key])
+        #             node._children = children
+        #     nodes = new_nodes
+        # tf = self._Node_to_TreeFrame(root)
+        # return tf
+    
+        # if not isinstance(key, tuple):
+        #     key = tuple([key])
+        # nodes = {'': self._root.copy()}
+        # for k in key:
+        #     if isinstance(k, (str, int)):
+        #         new_nodes = {}
+        #         for path, node in nodes.items():
+        #             if k in node.keys():
+        #                 new_nodes['.'.join([path,str(k)])] = node[k].copy()
+        #         nodes = new_nodes
+        #     if isinstance(k, (tuple, list)):
+        #         new_nodes = []
+        #         for node in nodes:
+        #             children = {}
+        #             for kk in k:
+        #                 if kk in node.keys():
+        #                     children[kk] = node[kk].copy()
+        #                     new_nodes.append(children[kk])
+        #             node._children = children
+        #         nodes = new_nodes
+        #     if isinstance(k, slice):
+        #         continue
+        # if isinstance(root, np.ndarray):
+        #     return root
+        # tf = self._Node_to_TreeFrame(root)
+        # return tf
 
     def __setitem__(self, key, value) -> None:
         if isinstance(key, tuple):
@@ -314,12 +434,8 @@ class TreeFrame:
     # Tree information
     # ------------------------------------------------------------------
 
-    def depth(self) -> int:
-        """Current maximum depth (number of key levels above the arrays)."""
-        return self._root.depth()
-
     def n_leaves(self) -> int:
-        return sum(1 for _ in self._root.leaves())
+        return self._root.n_leaves()
 
     def leaf_paths(self) -> list[tuple[str, ...]]:
         return [path for path, _ in self._root.leaves()]
@@ -606,7 +722,7 @@ if __name__ == "__main__":
 
     # ------------------------------------------------------------------
     print(f"\n{sep}")
-    print("2. Extra leaf in data  (fill_incomplete='zeros') → added + warn")
+    print("2. Extra leaf in data  (fill_incomplete='zeros') -> added + warn")
     print(sep)
 
     tf2 = TreeFrame(array_size=2, fill_incomplete="zeros")
@@ -623,7 +739,7 @@ if __name__ == "__main__":
 
     # ------------------------------------------------------------------
     print(f"\n{sep}")
-    print("3. Leaf missing from data  (fill_incomplete='drop') → dropped + warn")
+    print("3. Leaf missing from data  (fill_incomplete='drop') -> dropped + warn")
     print(sep)
 
     tf3 = TreeFrame(array_size=2, fill_incomplete="drop")
@@ -640,7 +756,7 @@ if __name__ == "__main__":
 
     # ------------------------------------------------------------------
     print(f"\n{sep}")
-    print("4. Overflow beyond array_size → single warning, arrays extend")
+    print("4. Overflow beyond array_size -> single warning, arrays extend")
     print(sep)
 
     tf4 = TreeFrame(array_size=3, fill_incomplete="zeros")
@@ -649,7 +765,7 @@ if __name__ == "__main__":
 
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        tf4.update({"x": rng.random()})   # overflow → warn once
+        tf4.update({"x": rng.random()})   # overflow -> warn once
         tf4.update({"x": rng.random()})   # no second warning
 
     for w in caught:
@@ -678,3 +794,29 @@ if __name__ == "__main__":
         print(tf_h.summary())
     except ImportError:
         print("(h5py not installed - skipping)")
+
+    # ------------------------------------------------------------------
+    print('\n', sep)
+    print("7. MutiAccessed")
+    print(sep)
+
+    tf = TreeFrame(array_size=8)
+    for i in range(8):
+        tf.update({"a": {1: {"x": rng.random(), "y": rng.random(), "z": rng.random()},
+                         2: {"x": rng.random(), "y": rng.random(), "z": rng.random()},
+                         3: {"x": rng.random(), "y": rng.random(), "z": rng.random()}},
+                   "b": {1: rng.random(), 
+                         2: rng.random(),
+                         3: rng.random()},
+                   "c": rng.random()})
+
+    print(tf.summary())
+    print(tf["a"].summary())
+    print(tf[["a", "b"]].summary())
+    print(tf[:].summary())
+    print(tf["a"][1].summary())
+    print(tf["a", 1].summary())
+    print(tf["a", :, "x"].summary())
+    print(tf[:, 1].summary())
+    print(tf[:, :2].summary())
+    print(tf[("a", "b"), (1, 3)].summary())
