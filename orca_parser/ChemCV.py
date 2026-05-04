@@ -139,3 +139,13 @@ class ChemCV(TreeFrame):
         chemcv._step_count = tf._step_count
         
         return chemcv
+
+if __name__ == "__main__":
+    import os
+    os.chdir("orca_parser")
+
+    chemcv = ChemCV(nb_traj=1)
+    chemcv.update()
+    print(chemcv.summary())
+    chemcv.save()
+    chemcv.load()

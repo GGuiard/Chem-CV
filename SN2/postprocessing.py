@@ -1,5 +1,5 @@
 import os
-os.chdir("SN2/TRAJ")
+os.chdir("SN2/OPES_50")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,14 +24,14 @@ traj_start, traj_end, traj_stride = 0, 500000, 1
 
 # Postprocessing options
 use_energy = False
-use_weights = False
-use_opes = False
-use_chemcv = True
+use_weights = True
+use_opes = True
+use_chemcv = False
 use_traj = False
 
 make_traj = True
-make_density = False
-make_fes = False
+make_density = True
+make_fes = True
 
 ### Import data ###
 
