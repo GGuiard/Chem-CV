@@ -261,7 +261,7 @@ def chemiscope(structures, time, d1, d2, adapt_radius: bool = True):
     
     write_input("chemiscope.json.gz", structures=structures, properties=properties, shapes=shapes, settings=settings)
 
-def chemiscope_chemcv(structures, time, d1, d2, chemcv, color, adapt_radius: bool = True):
+def chemiscope_chemcv(structures, time, d1, d2, chemcv, color = None, adapt_radius: bool = False):
     properties = {"d1": {"target": "structure",
                         "values": d1,
                         "description": "Distance between the carbon atom and the first chlorin atom"},
@@ -270,23 +270,10 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color, adapt_radius: boo
                         "description": "Coordination between the carbon atom and the second chlorin atom"},
                   "time": {"target": "structure",
                            "values": time,
-                           "description": "time [ps]"},
-                  "color": {"target": "atom",
-                        "values": color.ravel(),
-                        "description": "charge [e]"}}
+                           "description": "time [ps]"}}
     
     for name, value in chemcv.items():
         properties[name] = {"target": "structure", "values": value}
-
-    if adapt_radius:
-        atom_radius = []
-        for atoms in structures:
-            for atom in atoms:
-                atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
-        shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
-        settings["shape"] = "selection"
-    else:
-        shapes = {}
 
     settings = {"target": "structure",
                 "map": {"x": {"property": "d1"},
@@ -295,17 +282,32 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color, adapt_radius: boo
                 "structure": [{"bonds": True,
                                "spaceFilling": False,
                                "keepOrientation": True,
-                               "playbackDelay": 200,
-                               "atomLabels": True,
-                               "labelsProperty": "color",
-                               "color": {"property": "color", "palette": "bwr", "min":-1, "max":1}}]}
+                               "playbackDelay": 200}]}
+
+    if color:
+        properties["color"] = {"target": "atom",
+                               "values": color.ravel(),
+                               "description": "charge [e]"}
+        settings["structure"][0] | {"atomLabels": True,
+                                    "labelsProperty": "color",
+                                    "color": {"property": "color", "palette": "bwr", "min":-1, "max":1}}
+        
+    if adapt_radius:
+        atom_radius = []
+        for atoms in structures:
+            for atom in atoms:
+                atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
+        shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
+        settings["shapes"] = "selection"
+    else:
+        shapes = {}
 
     environments = all_atomic_environments(structures)
 
     write_input("chemiscope_chemcv.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
 
-def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixmax: bool = False, threshold: str = 0.0, legend: bool = True) -> None:
-    fig, ax = plt.subplots()
+def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixmax: bool = False, threshold: str = 0.0, legend: bool = True, fname: str = '') -> None:
+    fig, ax = plt.subplots(layout="constrained")
     for key, value in chemcv.items():
 
         if max(value) - min(value) < threshold:
@@ -321,100 +323,101 @@ def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixma
         if isinstance(key, tuple):
             label = '.'.join(key)
         else:
-            label = key
+            #TODO change after change in TreeFrame
+            label = '.'.join(key.split('.')[1:])
 
         ax.plot(value, label=label)
     
     ax.set_xlabel("number of frame")
     ax.set_ylabel(ylabel)
-    if legend: ax.legend()
+    if legend: fig.legend(loc="outside right upper")
 
-    fig.savefig("trj_chemcv.svg")
+    fig.savefig("_".join(["trj_chemcv", fname]) + ".svg")
     plt.close()
 
-def trj_chemcv_charges(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0.1, legend: bool = True) -> None:
-    fig, ax = plt.subplots()
-    for key, value in chemcv.items():
+# def trj_chemcv_charges(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0., legend: bool = True) -> None:
+#     fig, ax = plt.subplots()
+#     for key, value in chemcv.items():
 
-        if max(value) - min(value) < threshold:
-            continue
+#         if max(value) - min(value) < threshold:
+#             continue
 
-        if fixmin:
-            value -= min(value)
-            if fixmax:
-                value /= max(value)
-        elif fixmax:
-            value -= max(value)
+#         if fixmin:
+#             value -= min(value)
+#             if fixmax:
+#                 value /= max(value)
+#         elif fixmax:
+#             value -= max(value)
 
-        if isinstance(key, tuple):
-            label = '.'.join(key)
-        else:
-            label = key
+#         if isinstance(key, tuple):
+#             label = '.'.join(key)
+#         else:
+#             label = key
 
-        ax.plot(value, label=label)
+#         ax.plot(value, label=label)
     
-    ax.set_xlabel("number of frame")
-    ax.set_ylabel("q [e]")
-    if legend: ax.legend()
+#     ax.set_xlabel("number of frame")
+#     ax.set_ylabel("q [e]")
+#     if legend: ax.legend()
 
-    fig.savefig("trj_chemcv_charges.svg")
-    plt.close()
+#     fig.savefig("trj_chemcv_charges.svg")
+#     plt.close()
 
-def trj_chemcv_populations(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 100, legend: bool = True) -> None:
-    fig, ax = plt.subplots()
-    for key, value in chemcv.items():
+# def trj_chemcv_populations(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0., legend: bool = True) -> None:
+#     fig, ax = plt.subplots()
+#     for key, value in chemcv.items():
 
-        if max(value) - min(value) < threshold:
-            continue
+#         if max(value) - min(value) < threshold:
+#             continue
 
-        if fixmin:
-            value -= min(value)
-            if fixmax:
-                value /= max(value)
-        elif fixmax:
-            value -= max(value)
+#         if fixmin:
+#             value -= min(value)
+#             if fixmax:
+#                 value /= max(value)
+#         elif fixmax:
+#             value -= max(value)
 
-        if isinstance(key, tuple):
-            label = '.'.join(key)
-        else:
-            label = key
+#         if isinstance(key, tuple):
+#             label = '.'.join(key)
+#         else:
+#             label = key
             
-        ax.plot(value, label=label)
+#         ax.plot(value, label=label)
     
-    ax.set_xlabel("number of frame")
-    ax.set_ylabel("p [%]")
-    if legend: ax.legend()
+#     ax.set_xlabel("number of frame")
+#     ax.set_ylabel("p [%]")
+#     if legend: ax.legend()
 
-    fig.savefig("trj_chemcv_populations.svg")
-    plt.close()
+#     fig.savefig("trj_chemcv_populations.svg")
+#     plt.close()
 
-def trj_chemcv_energies(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 1, legend: bool = True) -> None:
-    fig, ax = plt.subplots()
-    for key, value in chemcv.items():
+# def trj_chemcv_energies(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0., legend: bool = True) -> None:
+#     fig, ax = plt.subplots()
+#     for key, value in chemcv.items():
 
-        if max(value) - min(value) < threshold:
-            continue
+#         if max(value) - min(value) < threshold:
+#             continue
 
-        if fixmin:
-            value -= min(value)
-            if fixmax:
-                value /= max(value)
-        elif fixmax:
-            value -= max(value)
+#         if fixmin:
+#             value -= min(value)
+#             if fixmax:
+#                 value /= max(value)
+#         elif fixmax:
+#             value -= max(value)
 
-        if isinstance(key, tuple):
-            label = '.'.join(key)
-        else:
-            label = key
+#         if isinstance(key, tuple):
+#             label = '.'.join(key)
+#         else:
+#             label = key
             
-        ax.plot(value, label=label)
+#         ax.plot(value, label=label)
     
-    ax.set_xlabel("number of frame")
-    ax.set_ylabel("E [eV]")
-    if legend: ax.legend()
+#     ax.set_xlabel("number of frame")
+#     ax.set_ylabel("E [eV]")
+#     if legend: ax.legend()
 
-    fig.savefig("trj_chemcv_energies.svg")
-    plt.close()
+#     fig.savefig("trj_chemcv_energies.svg")
+#     plt.close()
 
 def pred(ref, pred):
     fig, ax = plt.subplots()

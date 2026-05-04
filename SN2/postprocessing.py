@@ -1,5 +1,5 @@
 import os
-os.chdir("SN2/OPES_50")
+os.chdir("SN2/TRAJ")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,14 +24,14 @@ traj_start, traj_end, traj_stride = 0, 500000, 1
 
 # Postprocessing options
 use_energy = False
-use_weights = True
-use_opes = True
-use_chemcv = False
+use_weights = False
+use_opes = False
+use_chemcv = True
 use_traj = False
 
 make_traj = True
-make_density = True
-make_fes = True
+make_density = False
+make_fes = False
 
 ### Import data ###
 
@@ -106,10 +106,8 @@ if make_traj:
         figures.trj_n(time, neff, nker)
 
     if use_chemcv:
-        figures.trj_chemcv_charges(chemcv["q_Mulliken"].to_dict(), fixmin=True, fixmax=True, legend=False)
-        figures.trj_chemcv_populations(chemcv["p_AtMO_Mulliken"].to_dict(), fixmin=True, fixmax=True, threshold=10, legend=False)
-        figures.trj_chemcv_energies(chemcv["E_MO"].to_dict(), fixmin=True, fixmax=True, threshold=0.1, legend=False)
-        figures.trj_chemcv(chemcv["sigma_MBIS"].to_dict(), ylabel="sigma_MBIS", fixmin=True, legend=False)
+        for key in chemcv.keys():
+            figures.trj_chemcv(chemcv[key].to_dict(), fixmin=True, ylabel=key, fname=key)
 
 if make_density:
     figures.density_dd(grid_dd, density_dd)
@@ -130,6 +128,6 @@ plt.show()
 
 if use_traj:
     if use_chemcv:
-        figures.chemiscope_chemcv(traj, time, d1, d2, chemcv.to_dict(), chemcv["q_RESP"].to_numpy().T)
+        figures.chemiscope_chemcv(traj, time, d1, d2, chemcv.to_dict()) #chemcv["q_RESP"].to_numpy().T
     else:
         figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])

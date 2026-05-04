@@ -12,7 +12,12 @@ traj = read("traj.xyz", ':')
 
 nb_traj = len(traj)
 
-chemcv = ChemCV(nb_traj=nb_traj)
+chemcv = ChemCV(nb_traj=nb_traj, 
+                selections_per_type={"MO": [21,22], "atom": [0,1,5]},
+                kwargs_per_cv={"q_AO_Mulliken": {"fmt": ["atom", "l"]},
+                               "p_MOAO_Mulliken": {"fmt": ["MO", "atom", "l"]},
+                               "q_AO_Loewdin": {"fmt": ["atom", "l"]},
+                               "p_MOAO_Loewdin": {"fmt": ["MO", "atom", "l"]}})
 simpleinput, blocks = chemcv.get_orca_input()
 
 progress = Progress()

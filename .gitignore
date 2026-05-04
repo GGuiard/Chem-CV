@@ -11,7 +11,6 @@ bck.*
 *.ptc
 *.h5
 *.parquet
-/test.py
 __pycache__
 comments.md
 lightning_logs
@@ -19,3 +18,4 @@ mace-Fe111-charges.model
 ase/
 Fe111-N2-lammps
 ORCA/
+test/

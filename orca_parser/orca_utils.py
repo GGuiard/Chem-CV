@@ -308,12 +308,11 @@ def v_Mayer(properties: json, atoms: list[int] | None = None) -> dict:
         v_dict = {atom: v for atom, v in v_dict.items() if atom in atoms}
     return v_dict
 
-def b_Mayer(properties: json, atoms: list[int] | None = None) -> dict:
+def b_Mayer(properties: json, bonds: list[tuple[int|None]] = [(None, None)]) -> dict:
     b_list = properties["Geometries"][0]["Mayer_Population_Analysis"][0]["BondOrders"]
     components_list = properties["Geometries"][0]["Mayer_Population_Analysis"][0]["components"]
     b_dict = {(component[0], component[2]): b[0] for component, b in zip(components_list, b_list)}
-    if atoms:
-        b_dict = {atom_tuple: b for atom_tuple, b in b_dict.items() if (atom_tuple[0] in atoms) and (atom_tuple[1] in atoms)}
+    b_dict = {bond: b for bond, b in b_dict.items() if is_in_list_tuples(bond, bonds)}
     return b_dict
 
 def q_Hirshfeld(properties: json, atoms: list[int] | None = None) -> dict:
@@ -400,109 +399,127 @@ AVAILABLE_CHEMCVS = {
         "simpleinput": "MULLIKEN",
         "block": "",
         "source": orca_property,
-        "parsingfunction": q_Mulliken
+        "parsingfunction": q_Mulliken,
+        "selection_keys": ["atom"],
         },
     "q_AO_Mulliken": {
         "simpleinput": "MULLIKEN",
         "block": "%output Print[ P_OrbCharges_M ] 1 end",
         "source": orca_out,
-        "parsingfunction": q_AO_Mulliken
+        "parsingfunction": q_AO_Mulliken,
+        "selection_keys": ["atom", "n", "l", "m"],
         },
     "p_MOAt_Mulliken": {
         "simpleinput": "MULLIKEN",
         "block": "%output Print[ P_AtPopMO_M ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_MOAt_Mulliken
+        "parsingfunction": p_MOAt_Mulliken,
+        "selection_keys": ["MO", "atom"],
         },
     "p_MOAO_Mulliken": {
         "simpleinput": "MULLIKEN",
         "block": "%output Print[ P_OrbPopMO_M ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_MOAO_Mulliken
+        "parsingfunction": p_MOAO_Mulliken,
+        "selection_keys": ["MO", "atom", "n", "l", "m"],
         },
     "q_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "",
         "source": orca_property,
-        "parsingfunction": q_Loewdin
+        "parsingfunction": q_Loewdin,
+        "selection_keys": ["atom"],
         },
     "q_AO_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "%output Print[ P_OrbCharges_L ] 1 end",
         "source": orca_out,
-        "parsingfunction": q_AO_Loewdin
+        "parsingfunction": q_AO_Loewdin,
+        "selection_keys": ["atom", "n", "l", "m"],
         },
     "p_MOAt_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "%output Print[ P_AtPopMO_L ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_MOAt_Loewdin
+        "parsingfunction": p_MOAt_Loewdin,
+        "selection_keys": ["MO", "atom"],
         },
     "p_MOAO_Loewdin": {
         "simpleinput": "LOEWDIN",
         "block": "%output Print[ P_OrbPopMO_L ] 1 end",
         "source": orca_out,
-        "parsingfunction": p_MOAO_Loewdin
+        "parsingfunction": p_MOAO_Loewdin,
+        "selection_keys": ["MO", "atom", "n", "l", "m"],
         },
     "q_Mayer": {
         "simpleinput": "MAYER",
         "block": "",
         "source": orca_property,
-        "parsingfunction": q_Mayer
+        "parsingfunction": q_Mayer,
+        "selection_keys": ["atom"],
         },
     "v_Mayer": {
         "simpleinput": "MAYER",
         "block": "",
         "source": orca_property,
-        "parsingfunction": v_Mayer
+        "parsingfunction": v_Mayer,
+        "selection_keys": ["atom"],
         },
     "b_Mayer": {
         "simpleinput": "MAYER",
         "block": "",
         "source": orca_property,
-        "parsingfunction": b_Mayer
+        "parsingfunction": b_Mayer,
+        "selection_keys": ["atom", "atom"],
         },
     "q_Hirshfeld": {
         "simpleinput": "HIRSHFELD",
         "block": "",
         "source": orca_property,
-        "parsingfunction": q_Hirshfeld
+        "parsingfunction": q_Hirshfeld,
+        "selection_keys": ["atom"],
         },
     "q_MBIS": {
         "simpleinput": "MBIS",
         "block": "",
         "source": orca_property,
-        "parsingfunction": q_MBIS
+        "parsingfunction": q_MBIS,
+        "selection_keys": ["atom"],
         },
     "npop_MBIS": {
         "simpleinput": "MBIS",
         "block": "",
         "source": orca_property,
-        "parsingfunction": npop_MBIS
+        "parsingfunction": npop_MBIS,
+        "selection_keys": ["atom"],
         },
     "sigma_MBIS": {
         "simpleinput": "MBIS",
         "block": "",
         "source": orca_property,
-        "parsingfunction": sigma_MBIS
+        "parsingfunction": sigma_MBIS,
+        "selection_keys": ["atom"],
         },
     "q_CHELPG": {
         "simpleinput": "CHELPG",
         "block": "",
         "source": orca_property,
-        "parsingfunction": q_CHELPG
+        "parsingfunction": q_CHELPG,
+        "selection_keys": ["atom"],
         },         
     "q_RESP": {
         "simpleinput": "RESP",
         "block": "",
         "source": orca_out,
-        "parsingfunction": q_RESP
+        "parsingfunction": q_RESP,
+        "selection_keys": ["atom"],
         },
     "E_MO": {
         "simpleinput": "",
         "block": "",
         "source": orca_out,
-        "parsingfunction": E_MO
+        "parsingfunction": E_MO,
+        "selection_keys": ["MO"],
         },
     }
 
@@ -536,7 +553,7 @@ if __name__ == "__main__":
     print("q_Loewdin:", q_Loewdin(property, atoms=[0,1,5]), '\n')
     print("q_Mayer:", q_Mayer(property, atoms=[0,1,5]), '\n')
     print("v_Mayer:", v_Mayer(property, atoms=[0,1,5]), '\n')
-    print("b_Mayer:", b_Mayer(property, atoms=[0,1,5]), '\n')
+    print("b_Mayer:", b_Mayer(property, bonds=[(0,1), (0,5), (1,5)]), '\n')
     print("q_Hirshfeld:", q_Hirshfeld(property, atoms=[0,1,5]), '\n')
     print("q_MBIS:", q_MBIS(property, atoms=[0,1,5]), '\n')
     print("npop_MBIS:", npop_MBIS(property, atoms=[0,1,5]), '\n')

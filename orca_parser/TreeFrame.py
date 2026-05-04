@@ -44,7 +44,6 @@ Quick example
 """
 
 import json
-import warnings
 from pathlib import Path
 from typing import Iterator
 
@@ -409,11 +408,10 @@ class TreeFrame:
         # ---- overflow warning (emit only once) ---------------------------
         if step >= self.array_size:
             if not self._overflow_warned:
-                warnings.warn(
+                print(
                     f"The array_size={self.array_size} has been reached. "
                     "Leaf arrays will be extended by appending from now on. "
-                    "Consider using a larger array_size to avoid reallocation.",
-                    stacklevel=2,
+                    "Consider using a larger array_size to avoid reallocation."
                 )
                 self._overflow_warned = True
             _pad_all_leaves(self._root, step-self.array_size+1)
@@ -435,14 +433,14 @@ class TreeFrame:
         # In tree but missing from data
         for path in tree_paths - data_paths:
             if self.fill_incomplete == "drop":
-                warnings.warn(f"Leaf {path} is present in the TreeFrame but not in data. ", stacklevel=2)
+                print(f"Warning: Leaf {path} is present in the TreeFrame but not in data. ")
                 _delete_leaf(self._root, path)
             # 'zeros': do nothing, slot stays zero
 
         # In data but absent from tree
         for path in data_paths - tree_paths:
             if self.fill_incomplete == "zeros":
-                warnings.warn(f"Leaf {path} is present in data but not in the TreeFrame. ", stacklevel=2)
+                print(f"Warning: Leaf {path} is present in data but not in the TreeFrame. ")
                 arr = _create_leaf(self._root, path, self.array_size)
                 arr[step] = float(flat_data[path])
             # 'drop': ignore silently
@@ -664,12 +662,7 @@ if __name__ == "__main__":
     tf2 = TreeFrame(array_size=2, fill_incomplete="zeros")
     tf2.update({"a": rng.random(), "b": rng.random()})
 
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        tf2.update({"a": rng.random(), "b": rng.random(), "c": rng.random()})
-
-    for w in caught:
-        print(w.message)
+    tf2.update({"a": rng.random(), "b": rng.random(), "c": rng.random()})
 
     print(tf2.summary())
 
@@ -681,12 +674,7 @@ if __name__ == "__main__":
     tf3 = TreeFrame(array_size=2, fill_incomplete="drop")
     tf3.update({"a": rng.random(), "b": rng.random()})
 
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        tf3.update({"a": rng.random()}, step=1)
-
-    for w in caught:
-        print(w.message)
+    tf3.update({"a": rng.random()}, step=1)
 
     print(tf3.summary())
 
@@ -699,13 +687,8 @@ if __name__ == "__main__":
     for i in range(3):
         tf4.update({"x": rng.random()})
 
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        tf4.update({"x": rng.random()})   # overflow -> warn once
-        tf4.update({"x": rng.random()})   # no second warning
-
-    for w in caught:
-        print(w.message)
+    tf4.update({"x": rng.random()})   # overflow -> warn once
+    tf4.update({"x": rng.random()})   # no second warning
 
     print(tf4.summary())
     print("x:", tf4["x"])
