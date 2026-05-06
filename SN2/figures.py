@@ -229,39 +229,7 @@ def err_fes_2D(grid_d, err):
     fig.savefig("err_fer_2D.svg")
     plt.close()
 
-def chemiscope(structures, time, d1, d2, adapt_radius: bool = True):
-    properties = {"d1": {"target": "structure",
-                        "values": d1,
-                        "description": "Distance between the carbon atom and the first chlorin atom"},
-                  "d2": {"target": "structure",
-                        "values": d2,
-                        "description": "Coordination between the carbon atom and the second chlorin atom"},
-                  "time": {"target": "structure",
-                           "values": time,
-                           "description": "time [ps]"}}
-    
-    settings = {"target": "structure",
-                "map": {"x": {"property": "d1"},
-                        "y": {"property": "d2"},
-                        "color": {"property": "time"}},
-                "structure": [{"bonds": True,
-                               "spaceFilling": False,
-                               "keepOrientation": True,
-                               "playbackDelay": 200}]}
-    
-    if adapt_radius:
-        atom_radius = []
-        for atoms in structures:
-            for atom in atoms:
-                atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
-        shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
-        settings["shape"] = "selection"
-    else:
-        shapes = {}
-    
-    write_input("chemiscope.json.gz", structures=structures, properties=properties, shapes=shapes, settings=settings)
-
-def chemiscope_chemcv(structures, time, d1, d2, chemcv, color = None, adapt_radius: bool = False):
+def chemiscope(structures, time, d1, d2, chemcv = {}, color = None, adapt_radius: bool = False):
     properties = {"d1": {"target": "structure",
                         "values": d1,
                         "description": "Distance between the carbon atom and the first chlorin atom"},
@@ -304,7 +272,7 @@ def chemiscope_chemcv(structures, time, d1, d2, chemcv, color = None, adapt_radi
 
     environments = all_atomic_environments(structures)
 
-    write_input("chemiscope_chemcv.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
+    write_input("chemiscope.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
 
 def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixmax: bool = False, threshold: str = 0.0, legend: bool = True, fname: str = '') -> None:
     fig, ax = plt.subplots(layout="constrained")
@@ -334,90 +302,6 @@ def trj_chemcv(chemcv: dict, ylabel: str = "ChemCV", fixmin: bool = False, fixma
 
     fig.savefig("_".join(["trj_chemcv", fname]) + ".svg")
     plt.close()
-
-# def trj_chemcv_charges(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0., legend: bool = True) -> None:
-#     fig, ax = plt.subplots()
-#     for key, value in chemcv.items():
-
-#         if max(value) - min(value) < threshold:
-#             continue
-
-#         if fixmin:
-#             value -= min(value)
-#             if fixmax:
-#                 value /= max(value)
-#         elif fixmax:
-#             value -= max(value)
-
-#         if isinstance(key, tuple):
-#             label = '.'.join(key)
-#         else:
-#             label = key
-
-#         ax.plot(value, label=label)
-    
-#     ax.set_xlabel("number of frame")
-#     ax.set_ylabel("q [e]")
-#     if legend: ax.legend()
-
-#     fig.savefig("trj_chemcv_charges.svg")
-#     plt.close()
-
-# def trj_chemcv_populations(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0., legend: bool = True) -> None:
-#     fig, ax = plt.subplots()
-#     for key, value in chemcv.items():
-
-#         if max(value) - min(value) < threshold:
-#             continue
-
-#         if fixmin:
-#             value -= min(value)
-#             if fixmax:
-#                 value /= max(value)
-#         elif fixmax:
-#             value -= max(value)
-
-#         if isinstance(key, tuple):
-#             label = '.'.join(key)
-#         else:
-#             label = key
-            
-#         ax.plot(value, label=label)
-    
-#     ax.set_xlabel("number of frame")
-#     ax.set_ylabel("p [%]")
-#     if legend: ax.legend()
-
-#     fig.savefig("trj_chemcv_populations.svg")
-#     plt.close()
-
-# def trj_chemcv_energies(chemcv: dict, fixmin: bool = False, fixmax: bool = False, threshold: float = 0., legend: bool = True) -> None:
-#     fig, ax = plt.subplots()
-#     for key, value in chemcv.items():
-
-#         if max(value) - min(value) < threshold:
-#             continue
-
-#         if fixmin:
-#             value -= min(value)
-#             if fixmax:
-#                 value /= max(value)
-#         elif fixmax:
-#             value -= max(value)
-
-#         if isinstance(key, tuple):
-#             label = '.'.join(key)
-#         else:
-#             label = key
-            
-#         ax.plot(value, label=label)
-    
-#     ax.set_xlabel("number of frame")
-#     ax.set_ylabel("E [eV]")
-#     if legend: ax.legend()
-
-#     fig.savefig("trj_chemcv_energies.svg")
-#     plt.close()
 
 def pred(ref, pred):
     fig, ax = plt.subplots()

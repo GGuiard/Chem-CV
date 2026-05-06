@@ -1,5 +1,9 @@
-from .TreeFrame import TreeFrame
-from .orca_utils import *
+if __name__ == "__main__":
+    from TreeFrame import TreeFrame
+    from orca_utils import *
+else:
+    from .TreeFrame import TreeFrame
+    from .orca_utils import *
 
 from typing import List, Tuple, Optional, Any
 from pathlib import Path
@@ -174,7 +178,10 @@ class ChemCV(TreeFrame):
 
             try:
                 chemcv_data = parsing_function(loaded[source_fn], selection, **kwargs)
-                data[chemcv] = nest_tuple_dict(chemcv_data)
+                if isinstance(chemcv_data, dict):
+                    data[chemcv] = nest_tuple_dict(chemcv_data)
+                else:
+                    data[chemcv] = chemcv_data
             except (KeyError, IndexError, TypeError) as e:
                 print(f"Warning: Could not extract {chemcv}: {e}")
 
@@ -231,13 +238,32 @@ if __name__ == "__main__":
     import os
     os.chdir("orca_parser")
 
+    from ase import Atoms
+    from ase.calculators.orca import ORCA
+
     chemcv = ChemCV(nb_traj=1, 
-                    selections_per_type={"MO": [21,22], "atom": [0,1,5]},
+                    selections_per_type={"MO": [21,22], "atom": [0,1,5], "l": "p"},
                     kwargs_per_cv={"q_AO_Mulliken": {"fmt": ["atom", "l"]},
                                    "p_MOAO_Mulliken": {"fmt": ["MO", "atom", "l"]},
                                    "q_AO_Loewdin": {"fmt": ["atom", "l"]},
                                    "p_MOAO_Loewdin": {"fmt": ["MO", "atom", "l"]}})
+
+    atoms = Atoms("CClH3Cl", positions=[( 0.000, 0.000, 0.000),
+                                        ( 0.000, 0.000, 1.800),
+                                        ( 0.000, 1.076, 0.000),
+                                        ( 0.935,-0.540, 0.000),
+                                        (-0.935,-0.540, 0.000),
+                                        ( 0.000, 0.000,-2.300)])
+    
+    simpleinput, blocks = chemcv.get_orca_input()
+    atoms.calc = ORCA(charge=-1, mult=1, directory="ORCA", 
+                      orcasimpleinput=' '.join(["WB97X-D4 def2-TZVPD", simpleinput]), 
+                      orcablocks='\n'.join(["%pal nprocs 32 end", blocks]))
+    _ = atoms.get_potential_energy()
+
     chemcv.update()
+
     print(chemcv.summary())
-    chemcv.save()
-    chemcv.load()
+
+    # chemcv.save()
+    # chemcv.load()

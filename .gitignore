@@ -5,6 +5,7 @@ HILLS
 CHARGES
 ENERGY
 CHEMCV
+TIME
 bck.*
 *.json.gz
 *.traj

@@ -46,6 +46,24 @@ def get_ao_key(ao_str: str) -> Tuple[int, str, str]:
     
     return (n, l, m)
 
+def get_redao_key(redao_str: str) -> Tuple[int, str, str]:
+    """
+    Extract and convert redao notation to sortable components.
+    
+    Args:
+        redao_str: String
+    
+    Returns:
+        Tuple: (n, l, m)
+    """
+    # Extract quantum numbers
+    match = re.match(r'^([spdf])(.*)', redao_str)
+    
+    l = match.group(1)
+    m = match.group(2) if match.group(2) else ""
+    
+    return (l, m)
+
 def is_in_list_tuples(tuple: tuple[int|str|None], list_tuples: list[tuple[int|str|None]]) -> bool:
     for test_tuple in list_tuples:
         is_in = True
@@ -95,12 +113,13 @@ def q_Mulliken(properties: json, atoms: list[int] | None = None) -> dict:
         q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def q_AO_Mulliken(output_text: str, aos: list[tuple[int|str|None]] = [(None, None, None, None)], fmt: list[str] = ["atom", "n", "l", "m"]) -> dict:
+def q_AO_Mulliken(output_text: str, aos: list[tuple[int|str|None]] = [(None, "p", None, None)], fmt: list[str] = ["atom", "n", "l", "m"]) -> dict:
     pattern = r"MULLIKEN ORBITAL CHARGES.*?\n.*?\n.*?\n(.*?)(?:\nSum of orbital charges)"
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("MULLIKEN ORBITAL CHARGES section not found")
+        print("Warning: MULLIKEN ORBITAL CHARGES section not found")
+        return {}
     
     section = match.group(1)
     charges = {}
@@ -126,7 +145,8 @@ def p_MOAt_Mulliken(output_text: str, moats: list[tuple[int|None]] = [(None, Non
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("MULLIKEN ATOM POPULATIONS PER MO section not found")
+        print("Warning: MULLIKEN ATOM POPULATIONS PER MO section not found")
+        return {}
     
     section = match.group(1)
     blocks = section.split('\n\n')
@@ -156,12 +176,13 @@ def p_MOAt_Mulliken(output_text: str, moats: list[tuple[int|None]] = [(None, Non
     
     return populations
 
-def p_MOAO_Mulliken(output_text: str, moaos: list[tuple[int|str|None]] = [(None, None, None, None, None)], fmt: list[str] = ["MO", "atom", "n", "l", "m"], threshold: float = 0.1) -> dict:
+def p_MOAO_Mulliken(output_text: str, moaos: list[tuple[int|str|None]] = [(None, "p", None, None, None)], fmt: list[str] = ["MO", "atom", "n", "l", "m"], threshold: float = 0.1) -> dict:
     pattern = r"MULLIKEN ORBITAL POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("MULLIKEN ORBITAL POPULATIONS PER MO section not found")
+        print("Warning: MULLIKEN ORBITAL POPULATIONS PER MO section not found")
+        return {}
     
     section = match.group(1)
     blocks = section.split('\n\n')
@@ -198,13 +219,14 @@ def q_Loewdin(properties: json, atoms: list[int] | None = None) -> dict:
         q_dict = {atom: q for atom, q in q_dict.items() if atom in atoms}
     return q_dict
 
-def q_AO_Loewdin(output_text: str, aos: list[tuple[int|str|None]] = [(None, None, None, None)], fmt: list[str] = ["atom", "n", "l", "m"]) -> dict:
+def q_AO_Loewdin(output_text: str, aos: list[tuple[int|str|None]] = [(None, "p", None, None)], fmt: list[str] = ["atom", "n", "l", "m"]) -> dict:
     pattern = r"LOEWDIN ORBITAL CHARGES.*?\n.*?\n(.*?)(?:\n\n)"
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("LOEWDIN ORBITAL CHARGES section not found")
-    
+        print("Warning: LOEWDIN ORBITAL CHARGES section not found")
+        return {}
+
     section = match.group(1)
     charges = {}
     
@@ -229,7 +251,8 @@ def p_MOAt_Loewdin(output_text: str, moats: list[tuple[int|None]] = [(None, None
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("LOEWDIN ATOM POPULATIONS PER MO section not found")
+        print("Warning: LOEWDIN ATOM POPULATIONS PER MO section not found")
+        return {}
     
     section = match.group(1)
     blocks = section.split('\n\n')
@@ -259,12 +282,13 @@ def p_MOAt_Loewdin(output_text: str, moats: list[tuple[int|None]] = [(None, None
     
     return populations
 
-def p_MOAO_Loewdin(output_text: str, moaos: list[tuple[int|str|None]] = [(None, None, None, None, None)], fmt: list[str] = ["MO", "atom", "n", "l", "m"], threshold: float = 0.1) -> dict:
+def p_MOAO_Loewdin(output_text: str, moaos: list[tuple[int|str|None]] = [(None, "p", None, None, None)], fmt: list[str] = ["MO", "atom", "n", "l", "m"], threshold: float = 0.1) -> dict:
     pattern = r"LOEWDIN ORBITAL POPULATIONS PER MO.*?\n.*?\n.*?\n(.*?)(?:\n{3})"
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("LOEWDIN ORBITAL POPULATIONS PER MO section not found")
+        print("Warning: LOEWDIN ORBITAL POPULATIONS PER MO section not found")
+        return {}
     
     section = match.group(1)
     blocks = section.split('\n\n')
@@ -355,7 +379,8 @@ def q_RESP(output_text: str, atoms: list[int] | None = None) -> dict:
     match = re.search(pattern, output_text, re.DOTALL)
     
     if not match:
-        raise ValueError("RESP Charges section not found")
+        print("Warning: RESP Charges section not found")
+        return {}
     
     section = match.group(1)
     charges = {}
@@ -376,7 +401,8 @@ def E_MO(output_text: str, mos: list[int] | None = None) -> dict:
     match = re.search(pattern, output_text)
     
     if not match:
-        raise ValueError("ORBITAL ENERGIES")
+        print("Warning: ORBITAL ENERGIES section not found")
+        return {}
     
     section = match.group(1)
     energies = {}
@@ -391,6 +417,63 @@ def E_MO(output_text: str, mos: list[int] | None = None) -> dict:
             energies[mo] = float(parts[3])
     
     return energies
+
+def N_FOD(output_text: str, selection: None = None) -> dict:
+    pattern = r"N_FOD =(.*)"
+    match = re.search(pattern, output_text)
+    
+    if not match:
+        print("Warning: N_FOD section not found")
+        return {}
+    
+    line = match.group(1)
+    
+    parts = line.split()
+
+    n_fod = float(parts[0])
+    
+    return n_fod
+
+def q_AO_FOD(output_text: str, aos: list[tuple[int|None]] = [(None, None)], fmt: list[str] = ["atom", "l", "m"]) -> dict:
+    pattern = r"FOD BASED MULLIKEN REDUCED ORBITAL CHARGES.*?\n.*?\n(.*?)(?:\n{3})"
+    match = re.search(pattern, output_text, re.DOTALL)
+    
+    if not match:
+        print("Warning: FOD BASED MULLIKEN REDUCED ORBITAL CHARGES section not found")
+        return {}
+    
+    section = match.group(1)
+    blocks = section.split('\n\n')
+    
+    populations = {}
+    
+    for block in blocks:
+        lines = block.split('\n')
+
+        line = lines[0]
+
+        atom = int(line[:6].split()[0])
+        ao = (atom,) + get_redao_key(line[6:13].strip())
+        q = float(line[13:].split()[1])
+
+        if is_in_list_tuples(ao, aos):
+            populations[ao] = q
+
+        for line in lines[1:]:
+            parts = line.split()
+
+            ao = (atom,) + get_redao_key(parts[0])
+            q = float(parts[2])
+
+            if is_in_list_tuples(ao, aos):
+                populations[ao] = q
+
+    default_format = ["atom", "l", "m"]
+    if fmt != default_format:
+        populations = reduce(populations, fmt, default_format)
+    populations = sort(populations, fmt)
+    
+    return populations
 
 ### Dictionnary of the available ChemCV ###
 
@@ -523,6 +606,21 @@ AVAILABLE_CHEMCVS = {
         },
     }
 
+    # "N_FOD": {
+    #     "simpleinput": "FOD",
+    #     "block": "",
+    #     "source": orca_out,
+    #     "parsingfunction": N_FOD,
+    #     "selection_keys": [],
+    #     },
+    # "q_AO_FOD": {
+    #     "simpleinput": "FOD",
+    #     "block": "",
+    #     "source": orca_out,
+    #     "parsingfunction": q_AO_FOD,
+    #     "selection_keys": ["atom", "l", "m"],
+    #     },
+
 # ---------------------------------------------------------------------------
 # Demo / smoke-test
 # ---------------------------------------------------------------------------
@@ -531,6 +629,23 @@ if __name__ == "__main__":
     import os
     os.chdir("orca_parser")
     sep = "=" * 60
+
+    from ase import Atoms
+    from ase.calculators.orca import ORCA
+
+    atoms = Atoms("CClH3Cl", positions=[( 0.000, 0.000, 0.000),
+                                        ( 0.000, 0.000, 1.800),
+                                        ( 0.000, 1.076, 0.000),
+                                        ( 0.935,-0.540, 0.000),
+                                        (-0.935,-0.540, 0.000),
+                                        ( 0.000, 0.000,-2.300)])
+    
+    simpleinput = ' '.join(set([chemcv["simpleinput"] for chemcv in AVAILABLE_CHEMCVS.values()]))
+    blocks = '\n'.join(set([chemcv["block"] for chemcv in AVAILABLE_CHEMCVS.values()]))
+    atoms.calc = ORCA(charge=-1, mult=1, directory="ORCA", 
+                      orcasimpleinput=' '.join(["WB97X-D4 def2-TZVPD", simpleinput]), 
+                      orcablocks='\n'.join(["%pal nprocs 32 end", blocks]))
+    _ = atoms.get_potential_energy()
 
     # ------------------------------------------------------------------
     print(sep)
@@ -565,11 +680,13 @@ if __name__ == "__main__":
     print("2. Output chemcv")
     print(sep, '\n')
 
-    print("q_AO_Mulliken:", q_AO_Mulliken(output, aos=[(0, None, None, None), (1, None, None, None), (5, None, None, None)], fmt=["atom", "l"]), '\n')
+    print("q_AO_Mulliken:", q_AO_Mulliken(output, aos=[(0, None, "p", None), (1, None, "p", None), (5, None, "p", None)], fmt=["atom", "l"]), '\n')
     print("p_MOAt_Mulliken:", p_MOAt_Mulliken(output, moats=[(21, 0), (21, 1), (21, 5), (22, 0), (22, 1), (22, 5)]), '\n')
-    print("p_MOAO_Mulliken:", p_MOAO_Mulliken(output, moaos=[(21, 0, None, None, None), (21, 1, None, None, None), (21, 5, None, None, None), (22, 0, None, None, None), (22, 1, None, None, None), (22, 5, None, None, None)], fmt=["MO", "atom", "l"]), '\n')
-    print("q_AO_Loewdin:", q_AO_Loewdin(output, aos=[(0, None, None, None), (1, None, None, None), (5, None, None, None)], fmt=["atom", "l"]), '\n')
+    print("p_MOAO_Mulliken:", p_MOAO_Mulliken(output, moaos=[(21, 0, None, "p", None), (21, 1, None, "p", None), (21, 5, None, "p", None), (22, 0, None, "p", None), (22, 1, None, "p", None), (22, 5, None, "p", None)], fmt=["MO", "atom", "l"]), '\n')
+    print("q_AO_Loewdin:", q_AO_Loewdin(output, aos=[(0, None, "p", None), (1, None, "p", None), (5, None, "p", None)], fmt=["atom", "l"]), '\n')
     print("p_MOAt_Loewdin:", p_MOAt_Loewdin(output, moats=[(21, 0), (21, 1), (21, 5), (22, 0), (22, 1), (22, 5)]), '\n')
-    print("p_MOAO_Loewdin:", p_MOAO_Loewdin(output, moaos=[(21, 0, None, None, None), (21, 1, None, None, None), (21, 5, None, None, None), (22, 0, None, None, None), (22, 1, None, None, None), (22, 5, None, None, None)], fmt=["MO", "atom", "l"]), '\n')
+    print("p_MOAO_Loewdin:", p_MOAO_Loewdin(output, moaos=[(21, 0, None, "p", None), (21, 1, None, "p", None), (21, 5, None, "p", None), (22, 0, None, "p", None), (22, 1, None, "p", None), (22, 5, None, "p", None)], fmt=["MO", "atom", "l"]), '\n')
     print("q_RESP:", q_RESP(output, atoms=[0,1,5]), '\n')
     print("E_MO:", E_MO(output, mos=[21,22]), '\n')
+    # print("N_FOD:", N_FOD(output), '\n')
+    # print("q_AO_FOD:", q_AO_FOD(output, aos=[(0, "p", None), (1, "p", None), (5, "p", None)], fmt=["atom", "l"]), '\n')

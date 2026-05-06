@@ -20,14 +20,14 @@ transient = 0
 nb_bins_d = 100
 sigma_d = 0.2
 nb_bootstraps_1D, nb_bootstraps_2D = 10, 10
-traj_start, traj_end, traj_stride = 0, 500000, 1
+traj_start, traj_end, traj_stride = 0, 100000, 1
 
 # Postprocessing options
 use_energy = False
 use_weights = False
 use_opes = False
 use_chemcv = True
-use_traj = False
+use_traj = True
 
 make_traj = True
 make_density = False
@@ -128,6 +128,6 @@ plt.show()
 
 if use_traj:
     if use_chemcv:
-        figures.chemiscope_chemcv(traj, time, d1, d2, chemcv.to_dict()) #chemcv["q_RESP"].to_numpy().T
+        figures.chemiscope(traj, time, d1, d2, chemcv.to_dict()) #chemcv["q_RESP"].to_numpy().T
     else:
         figures.chemiscope(traj, time[traj_start:traj_end:traj_stride], d1[traj_start:traj_end:traj_stride], d2[traj_start:traj_end:traj_stride])
