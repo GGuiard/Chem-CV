@@ -40,6 +40,8 @@ pip install -e mace
 
 I downloaded mace-Fe111-charges.model from the link he sent me.
 
+Installed the MACE-OFF medium24 foundation model from : https://github.com/ACEsuit/mace-off/raw/refs/heads/main/mace_off24/MACE-OFF24_medium.model
+
 ### Luigi Bonati fork of ASE (for ExtraCV)
 
 ````

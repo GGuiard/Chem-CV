@@ -13,16 +13,21 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### main.py
 
+- [ ] Globally add another main for restart and be carefull of traj
 - [X] Make the OPES_METAD_EXPLORE works
 - [X] Save E and T somewhere accessible for the postprocessing script
 
 ### postprocessing.py
 
+- [ ] Change fes calculation to the one of mlcolvar for KDE and better errors
+- [ ] Automatically adapt what is ploted from what is available using try
+- [ ] Change postprocessing.py to a overall general function
 - [X] Give the possibility to save the figures into another named folder with premade names
 - [X] Either wrap positions in traj or change something in chemiscope
 
 ### analyze.py
 
+- [ ] change bootstrap and block for better error accounting for w_block
 - [X] Better implement kde pop while keeping the possibility to use normal pop
 - [X] Correct cum_av with weight
 - [ ] Make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
@@ -31,6 +36,8 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### figures.py
 
+- [ ] Make plots more versatiles
+- [ ] Use fessa
 - [~] Adapt radius in chemiscope plots using CR from ASE (reference in DEAL repo of LB)
 - [ ] Make plot with sampling superimposed on fes 2d (maybe with charge)
 - [ ] Visualize STATES file and FES from STATES

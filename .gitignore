@@ -20,3 +20,8 @@ ase/
 Fe111-N2-lammps
 ORCA/
 test/
+traj.xyz
+traj_top.pdb
+dataset
+dataset.xyz
+log

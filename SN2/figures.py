@@ -252,13 +252,13 @@ def chemiscope(structures, time, d1, d2, chemcv = {}, color = None, adapt_radius
                                "keepOrientation": True,
                                "playbackDelay": 200}]}
 
-    if color:
+    if isinstance(color, (list, np.ndarray)):
         properties["color"] = {"target": "atom",
                                "values": color.ravel(),
                                "description": "charge [e]"}
-        settings["structure"][0] | {"atomLabels": True,
-                                    "labelsProperty": "color",
-                                    "color": {"property": "color", "palette": "bwr", "min":-1, "max":1}}
+        settings["structure"][0] = settings["structure"][0] | {"atomLabels": True,
+                                                               "labelsProperty": "color",
+                                                               "color": {"property": "color", "palette": "bwr", "min":-1, "max":1}}
         
     if adapt_radius:
         atom_radius = []

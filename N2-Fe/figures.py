@@ -386,12 +386,13 @@ def chemiscope_charge(structures, d, c, q):
     write_input("chemiscope_charge.json.gz", structures=structures, properties=properties, environments=environments, settings=settings)
 
 def pred(ref, pred):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(layout='tight')
     ax.plot([0, 1], [0, 1], color='k', linestyle='--')
     ax.plot(ref, pred, 'o', ms=1)
     
     ax.set_xlabel("Reference")
     ax.set_ylabel("Prediction")
+    ax.set_aspect('equal', 'box')
 
     fig.savefig("pred.svg")
     plt.close()
