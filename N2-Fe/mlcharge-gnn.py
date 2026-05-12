@@ -3,98 +3,104 @@ os.chdir("N2-Fe/OPES_2")
 
 import numpy as np
 from mlcolvar.data import DictModule
-from mlcolvar.data.utils import save_dataset, load_dataset
+# from mlcolvar.data.utils import save_dataset_configurations_as_extyz
 from mlcolvar.cvs import RegressionCV
 from mlcolvar.utils.trainer import MetricsCallback
 from mlcolvar.utils.plot import plot_metrics
 from mlcolvar.utils.io import create_dataset_from_trajectories
 from mlcolvar.core.nn.graph.schnet import SchNetModel
 from lightning import Trainer
-from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from torch import no_grad
-from torch.jit import load
+from torch.optim import lr_scheduler
 from ase.io import read, write
 import matplotlib.pyplot as plt
 from rich.progress import Progress
 
-use_dataset = False
-use_model = False
-
 ### Create Dataset ###
 
-if use_dataset:
-    dataset = load_dataset("dataset")
+sampling_traj_with_traget = np.arange(0, 200001, 10)
+# rng = np.random.default_rng(42)
+# sampling = rng.choice(len(sampling_traj_with_traget), size=100, replace=False)
+sampling = np.arange(100)
+np.random.shuffle(sampling)
+sampling_traj = sampling_traj_with_traget[sampling]
 
-else:
-    sampling = np.arange(100) #20000
-    sampling_traj_with_traget = np.arange(0, 200001, 10)
-    sampling_traj = sampling_traj_with_traget[sampling]
+progress = Progress()
+task = progress.add_task("Processing...", total=len(sampling))
+trajectories = [None for i in range(len(sampling))]
+progress.start()
+for i, index in enumerate(sampling):
+    trajectories[i] = read("traj_comp.traj", index)
+    trajectories[i].set_pbc([True, True, True])
+    progress.update(task, advance=1)
+progress.stop()
+write('traj.xyz', trajectories)
 
-    progress = Progress()
-    task = progress.add_task("Processing...", total=len(sampling))
-    trajectories = [None for i in range(len(sampling))]
-    progress.start()
-    for i, index in enumerate(sampling):
-        trajectories[i] = read("traj_comp.traj", index)
-        trajectories[i].set_pbc([True, True, True])
-        progress.update(task, advance=1)
-    progress.stop()
-    write('traj.xyz', trajectories)
+q = np.loadtxt("CHARGES")[sampling]
+target = (q[:,72]+q[:,73])/2
+target_mean = target.mean()
+target_std  = target.std()
+target = (target - target_mean) / target_std
 
-    q = np.loadtxt("CHARGES")[sampling]
-    target = (q[:,72]+q[:,73])/2
+dataset = create_dataset_from_trajectories(
+    "traj.xyz",
+    topologies=None,
+    cutoff=4.0,
+    graph_labels=target,
+    system_selection="type N",
+    subsystem_selection="type N",
+    long_range_cutoff=10,
+    environment_selection="not type N",
+    )
 
-    dataset = create_dataset_from_trajectories("traj.xyz",
-                                               topologies=None,
-                                               cutoff=4.0,
-                                               graph_labels=target,
-                                               system_selection="type N",
-                                               environment_selection="not type N")
+datamodule = DictModule(dataset)
 
-    save_dataset(dataset, "dataset")
-
-### Create DataModule ###
-
-datamodule = DictModule(dataset, lengths=[0.8,0.2])
+# save_dataset_configurations_as_extyz(dataset, "dataset.xyz")
 
 ### Create and Train Model ###
 
-if use_model:
-    model = load('../model.ptc')
+gnn_model = SchNetModel(
+    n_out=1,
+    cutoff=dataset.metadata["cutoff"],
+    atomic_numbers=dataset.metadata["atomic_numbers"],
+    w_out_after_pool=True,
+    n_layers=2,
+    )
 
-else:
-    gnn_model = SchNetModel(n_out=1,
-                            cutoff=dataset.metadata["cutoff"],
-                            atomic_numbers=dataset.metadata["atomic_numbers"],
-                            w_out_after_pool=False,
-                            n_layers=2)
+options = {
+    'optimizer': {'lr': 1e-3},
+    'lr_scheduler': {
+        'scheduler': lr_scheduler.ExponentialLR,
+        'gamma': 0.9999
+        }
+    }
+model = RegressionCV(gnn_model, options=options)
 
-    options = {'optimizer': {'lr': 1e-3}}
-    model = RegressionCV(gnn_model, options=options)
+metrics = MetricsCallback()
 
-    metrics = MetricsCallback()
-    early_stopping = EarlyStopping(monitor="valid_loss",
-                                   patience=5000,
-                                   min_delta=1e-5)
-   
-    trainer = Trainer(callbacks=[metrics, early_stopping],
-                      enable_model_summary=False,
-                      max_epochs=1000)
+trainer = Trainer(
+    callbacks=[metrics],
+    logger=False,
+    enable_checkpointing=False,
+    max_epochs=1000,
+    enable_model_summary=False,
+    )
 
-    trainer.fit(model, datamodule)
+trainer.fit(model, datamodule)
 
-    ax = plot_metrics(metrics.metrics,
-                      keys=['train_loss_epoch','valid_loss'],
-                      linestyles=['-.','-'],
-                      colors=['fessa1','fessa5'],
-                      yscale='log')
-    plt.savefig('plot_metrics.svg')
+ax = plot_metrics(
+    metrics.metrics,          
+    keys=['train_loss_epoch','valid_loss'],
+    linestyles=['-.','-'],
+    colors=['fessa1','fessa5'],
+    yscale='log',
+    )
+plt.savefig('plot_metrics.svg')
 
-    model.to_torchscript('../model.ptc', method="trace")
+model.to_torchscript('../model.ptc', method="trace")
 
 ### Plots ###
 
-datamodule.setup()
 train_indices = datamodule._dataset_split[0].indices
 val_indices = datamodule._dataset_split[1].indices
 
