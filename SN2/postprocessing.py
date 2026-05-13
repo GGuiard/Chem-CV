@@ -1,5 +1,5 @@
 import os
-os.chdir("SN2/OPES_200_PACE_500")
+os.chdir("SN2/OPES")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,18 +18,18 @@ kT = units.kB*T
 # Postprocessing parameters
 transient = 0
 nb_bins_d = 100
-sigma_d = 0.2
-nb_bootstraps_1D, nb_bootstraps_2D = 10, 10
+sigma_d = 0.01
+nb_bootstraps_1D, nb_bootstraps_2D = 3, 3
 traj_start, traj_end, traj_stride = 0, 100000, 1
 
 # Postprocessing options
-use_energy = True
+use_energy = False
 use_weights = True
-use_opes = True
+use_opes = False
 use_chemcv = False
 use_traj = False
 
-make_traj = True
+make_traj = False
 make_density = True
 make_fes = True
 
@@ -56,7 +56,7 @@ if use_energy:
     av_Temp, std_Temp = np.average(Temp), np.std(Temp)
 
 if make_density or make_fes:
-    bins_dd, bins_d = np.linspace(-6, 6, nb_bins_d), np.linspace(0, 6, nb_bins_d)
+    bins_dd, bins_d = np.linspace(-2.5, 2.5, nb_bins_d), np.linspace(0, 6, nb_bins_d)
     grid_dd, grid_d = analyze.bin_to_grid(bins_dd), analyze.bin_to_grid(bins_d)
 
 if make_density:

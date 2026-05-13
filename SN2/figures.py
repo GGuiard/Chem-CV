@@ -164,7 +164,7 @@ def fes_dd(grid, fes, err):
     ax.set_xlabel(r"$d_{C-Cl_1} - d_{C-Cl_2}\ [A]$")
     ax.set_ylabel("FES [eV]")
     ax.set_xlim(-2.5, 2.5)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 2)
     
     fig.savefig("fes_dd.svg")
     plt.close()
@@ -177,7 +177,7 @@ def fes_d1(grid, fes, err):
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel("FES [eV]")
     ax.set_xlim(1.5, 4)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 2)
     
     fig.savefig("fes_d1.svg")
     plt.close()
@@ -190,15 +190,15 @@ def fes_d2(grid, fes, err):
     ax.set_xlabel(r"$d_{C-Cl_2}\ [A]$")
     ax.set_ylabel("FES [eV]")
     ax.set_xlim(1.5, 4)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 2)
     
     fig.savefig("fes_d2.svg")
     plt.close()
 
 def fes_2D(grid_d, fes):
     fig, ax = plt.subplots(layout='tight')
-    im = ax.contourf(grid_d, grid_d, fes.T, np.linspace(0, 1, 11), cmap=colormaps['Blues_r'])
-    ax.contour(grid_d, grid_d, fes.T, np.linspace(0, 1, 11), linestyles='-', colors='darkgray', linewidths=1.2)
+    im = ax.contourf(grid_d, grid_d, fes.T, np.linspace(0, 2, 11), cmap=colormaps['Blues_r'])
+    ax.contour(grid_d, grid_d, fes.T, np.linspace(0, 2, 11), linestyles='-', colors='darkgray', linewidths=1.2)
 
     ax.set_xlabel(r"$d_{C-Cl_1}\ [A]$")
     ax.set_ylabel(r"$d_{C-Cl_2}\ [A]$")
