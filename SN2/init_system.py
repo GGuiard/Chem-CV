@@ -25,4 +25,6 @@ atoms.set_constraint([FixAtoms(0), FixedLine([1,5], [0,0,1]), FixedPlane(2, [1,0
 dyn = QuasiNewton(atoms)
 dyn.run(fmax=0.05)
 
+atoms.set_constraint()
+
 write('init.xyz', atoms)

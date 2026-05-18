@@ -69,8 +69,14 @@ Overall the code need more comments, at least for the functions, with specified 
 - [X] Use NEB from reactant to products
 - [ ] Add a little bit of noise
 
+### ChemCV.py
+
+- [ ] add possibility to give kwargs in chemcv selection
+- [ ] update in a way that append a txt file to have backups
+
 ### dft.py
 
+- [ ] save energy and force in a xyz file (appended)
 - [X] Make a change so that each ORCA output can be saved in different directories
 
 ### orca_parser

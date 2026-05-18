@@ -20,6 +20,7 @@ ase/
 Fe111-N2-lammps
 ORCA/
 test/
+HPC/
 traj.xyz
 traj_top.pdb
 dataset

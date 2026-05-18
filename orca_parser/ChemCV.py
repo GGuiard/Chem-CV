@@ -142,8 +142,8 @@ class ChemCV(TreeFrame):
             simpleinput.add(AVAILABLE_CHEMCVS[chemcv]["simpleinput"])
             blocks.add(AVAILABLE_CHEMCVS[chemcv]["block"])
         
-        simpleinput = ' '.join(simpleinput)
-        blocks = '\n'.join(blocks)
+        simpleinput = ' '.join([txt for txt in simpleinput if txt])
+        blocks = '\n'.join([txt for txt in blocks if txt])
         
         return simpleinput, blocks
     

@@ -13,8 +13,6 @@ All compute routines return plain NumPy arrays so they can be used
 independently of any particular plotting library.
 """
 
-from __future__ import annotations
-
 import numpy as np
 from ase import units
 from mlcolvar.utils.fes import compute_fes
