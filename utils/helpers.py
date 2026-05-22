@@ -5,6 +5,7 @@ General helpers functions for molecular dynamics.
 """
 
 import numpy as np
+import pandas as pd
 from ase.io import read, write
 from scipy.spatial.transform import Rotation
 import subprocess
@@ -134,9 +135,9 @@ def bin_2D(
     nb_bins: int = 20,
     bounds: tuple = (None, None),
 ) -> np.ndarray:
-    if not bounds[0]:
+    if bounds[0] is None:
         bounds[0] = np.min(x)
-    if not bounds[1]:
+    if bounds[1] is None:
         bounds[1] = np.max(x)
 
     bins = np.linspace(bounds[0], bounds[1], nb_bins+1)
@@ -147,3 +148,24 @@ def bin_2D(
         dataset.append(y[arg])
 
     return bins, dataset
+
+
+# ---------------------------------------------------------------------------
+# PLUMED objects
+# ---------------------------------------------------------------------------
+
+def save_as_colvar(
+    df: pd.DataFrame,
+    fname: str = "COLVAR"
+) -> None:
+    fields = list(df.columns)
+    values = df.to_numpy()
+
+    np.savetxt(
+        fname,
+        values,
+        delimiter=' ',
+        fmt='%13.6f',
+        header=f"FIELDS {' '.join(fields)}",
+        comments="#! ",
+    )

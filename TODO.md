@@ -4,7 +4,17 @@ This file compiles the different things to do for the advancement of the project
 
 Overall the code need more comments, at least for the functions, with specified argument type.
 
+
 ---
+
+### Overall
+- [ ] More comments
+- [ ] Docstrings for file, functions, objects and the arguments type
+- [ ] python file for general functions and notebook for system specific things
+- [ ] change overall architecture to split tasks into subfolders
+- [ ] take care of path management
+- [ ] save every self sufficient data in the subfolder associated to one's task
+- [ ] take care of issues of saving and use with simple .xyz or advanced .extyz with cell and pbc for GNNs
 
 ### INSTALLATION.md
 

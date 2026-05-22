@@ -24,12 +24,32 @@ Remove other conda environments with PLUMED and/or GROMACS.
 conda create -n md_env python=3.11
 conda activate md_env
 conda install -c conda-forge numpy pandas matplotlib scipy notebook cython pybind11 pytables
-pip install torch torchvision cuequivariance cuequivariance-torch chemiscope rich
+pip install torch torchvision cuequivariance cuequivariance-torch chemiscope rich franken[cuda,mace]
 ````
 
 if needed install cmake with conda
 
+<!-- had issues with franken because of cupy so had to install cuda-toolkit -->
 <!-- conda install py-plumed "numpy<2.0 ? -->
+<!-- installed code for commitor with: pip install git+https://github.com/luigibonati/ase-tps.git -->
+
+<!-- On CINECA:
+conda create -n md_env python=3.11 pip libstdcxx-ng numconda py pandas matplotlib scipy
+conda activate md_env
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install cuequivariance cuequivariance-torch ase mace-torch
+
+pip install ./mlcolvar/ ./ase-tps-main/
+ 
+module load cuda/12.2
+module load nvhpc/
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+export TORCH_CUDA_ARCH_LIST="8.0"
+export CUDAARCHS=80
+pip install cupy-cuda12x
+git clone https://github.com/CSML-IIT-UCL/franken.git
+pip install ./franken[cuda,mace] --no-deps
+-->
 
 ### Luigi Bonati fork of MACE (for MACECharge)
 
@@ -52,7 +72,8 @@ pip install -e ase
 ### Latest version of mlcolvar (for GNN)
 
 ````
-pip install git+https://github.com/luigibonati/mlcolvar@release/2.0
+git clone https://github.com/luigibonati/mlcolvar.git -b release/2.0
+pip install -e mlcolvar
 ````
 
 ### Libtorch

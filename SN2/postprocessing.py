@@ -1,5 +1,5 @@
 import os
-os.chdir("SN2/OPES")
+os.chdir("SN2/SAMPLING")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,28 +24,28 @@ traj_start, traj_end, traj_stride = 0, 100000, 1
 
 # Postprocessing options
 use_energy = False
-use_weights = True
+use_weights = False
 use_opes = False
 use_chemcv = False
-use_traj = False
+use_traj = True
 
 make_traj = False
-make_density = True
-make_fes = True
+make_density = False
+make_fes = False
 
 ### Import data ###
 
 if use_energy: Emec, Temp = np.loadtxt("ENERGY").T
 
-data = plumed.read_as_pandas("COLVAR")
-time, dd, d1, d2 = data[["time", "dd", "d1", "d2"]].to_numpy().T
+# data = plumed.read_as_pandas("COLVAR")
+# time, dd, d1, d2 = data[["time", "dd", "d1", "d2"]].to_numpy().T
 if use_weights: weights = analyze.logw_to_w(data["opes.bias"].to_numpy().T, kT)
 if use_opes: rct, zed, neff, nker = data[["opes.rct", "opes.zed", "opes.neff", "opes.nker"]].to_numpy().T
 
 if use_chemcv:
     chemcv = ChemCV.load()
 
-if use_traj: traj = read("traj.xyz", f"{traj_start}:{traj_end}:{traj_stride}")
+if use_traj: traj = read("committor_traj.xyz", f"{traj_start}:{traj_end}:{traj_stride}")
 
 ### Postprocessing ###
 

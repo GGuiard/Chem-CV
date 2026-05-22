@@ -1,9 +1,10 @@
 import os
-os.chdir("SN2/OPES")
+os.chdir("SN2")
 
 import numpy as np
 import plumed
 from ase.io import read, write
+from ase import Atoms
 import utils.figures
 import utils.helpers as helpers
 
@@ -28,18 +29,15 @@ def bin_sampling(
 
     return np.array(indices_per_bin).ravel()
 
-data = plumed.read_as_pandas("COLVAR").iloc[::10]
+data = plumed.read_as_pandas("OPES/COLVAR").iloc[::10]
 dd = data["dd"].to_numpy().T
 
 indices = bin_sampling(dd, bounds=(-2.5, 2.5))
-np.save("sampling_indices", indices)
+np.save("SAMPLING/sampling_indices", indices)
 
-structures = []
-for index in indices:
-    atoms = read("traj_comp.traj", index)
-    atoms.positions -= atoms.get_center_of_mass()
-    structures.append(atoms)
-write("sampling.xyz", structures, format="xyz")
+structures = [read("OPES/traj_comp.traj", index) for index in indices]
+
+write("SAMPLING/sampling.xyz", structures)
 
 plot_structures = helpers.orient_traj(structures, y_axis=5)
 dd = dd[indices]

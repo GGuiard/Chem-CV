@@ -409,7 +409,9 @@ def chemiscope(
     d2,
     chemcv = {},
     color = None,
-    adapt_radius: bool = False
+    adapt_radius: bool = False,
+    save_directory: str = "",
+    save_name: str = "chemiscope",
 ):
     properties = {"d1": {"target": "structure",
                         "values": d1,
@@ -453,7 +455,7 @@ def chemiscope(
 
     environments = all_atomic_environments(structures)
 
-    write_input("chemiscope.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
+    write_input(f"{save_directory}/{save_name}.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
 
 # -----------------------------------------------------------------------
 # Correlation

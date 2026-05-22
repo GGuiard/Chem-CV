@@ -125,5 +125,5 @@ dd = np.array(d1)-np.array(d2)
 
 figures.chemiscope(images, time, d1, d2)
 
-write('traj.xyz', images)
+write('path.xyz', images)
 np.savetxt("COLVAR", np.array([time, dd, d1, d2]).T, delimiter=' ', fmt='%9.6f', header="FIELDS time dd d1 d2", comments="#! ")
