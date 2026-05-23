@@ -140,6 +140,12 @@ save and exit with Ctrl+O, Enter, Ctrl+X
 source ~/.bashrc
 ````
 
+Might need to specify the plumed source to load plumed interfaces from mlcolvar:
+
+````
+PLUMED_SOURCE=$HOME/plumed-2.10.0/sourceme.sh
+````
+
 ### ORCA
 
 Register and download the right version of ORCA on www.faccts.de.

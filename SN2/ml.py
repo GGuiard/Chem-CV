@@ -23,13 +23,15 @@ subprocess.run("mkdir ML", shell=True)
 
 # --- Import Data ---
 
-trajectories = read("DFT/sampling.xyz", ":")
+# trajectories = read("DFT/sampling.xyz", ":")
 
-for atoms in trajectories:
-    atoms.center(1)
-    atoms.set_pbc(False)
+# for atoms in trajectories:
+#     atoms.center(1)
+#     atoms.set_pbc(False)
 
-write("ML/trajectories.xyz", trajectories)
+# write("ML/trajectories.xyz", trajectories)
+
+trajectories = read("ML/trajectories.xyz")
 
 raw_chemcvs = ChemCV.load(path="DFT/CHEMCV", format="json").to_dict()
 chemcvs = {
@@ -68,11 +70,6 @@ for chemcv_name, graph_labels in chemcvs.items():
         atomic_numbers=dataset.metadata["atomic_numbers"],
         pooling_operation="custom",
     )
-
-    # n_bases=32,
-    # n_layers=5,
-    # n_filters=32,
-    # n_hidden_channels=32,
 
     options = {
         'optimizer': {'lr': 1e-3},
