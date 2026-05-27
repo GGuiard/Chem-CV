@@ -137,6 +137,8 @@ def postprocessing(
         # Energy
         if "ene" in data.columns:
             energy = data["ene"].to_numpy()
+        else:
+            energy = None
 
         # Weights
         if "opes.bias" in data.columns:
