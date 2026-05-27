@@ -11,7 +11,8 @@
 !*/
 
 __pycache__/
-/mlcolvar/
+/my_mlcolvar/
+/my_ase/
 test/
 Fe111-N2-lammps/
 lightning_logs/

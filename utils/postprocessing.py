@@ -6,7 +6,7 @@ Orchestrates the full post-processing pipeline for a MD simulation:
   1. Load COLVAR (and optionally ENERGY) output files via plumed.
   2. Compute densities and free-energy surfaces (FES) with
      error estimates.
-  3. Save figures.
+  3. Save 
 """
 
 import warnings
@@ -16,8 +16,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plumed
 
-import analyze
-import figures
+from .analyze import *
+from .figures import *
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +51,7 @@ def postprocessing(
     error_min_2d: float | None = None,
     error_max_2d: float | None = None,
     # --- General options ---
+    directory: str = '',
     save: bool = True,
     show: bool = True,
     symmetric: bool = False,
@@ -71,7 +72,7 @@ def postprocessing(
         CV keys for 1-D FES figures (every CV gets trajectory + density).
 
     cv_2d : list[tuple[str, str]]
-        CV key pairs for 2-D figures.
+        CV key pairs for 2-D 
 
     time_unit : str or None
         Label for time axes (e.g. ``"ps"``).
@@ -119,7 +120,7 @@ def postprocessing(
     # -----------------------------------------------------------------------
     # Load COLVAR
     # -----------------------------------------------------------------------
-    colvar_path = Path("COLVAR")
+    colvar_path = Path(directory+"/COLVAR")
     if colvar_path.exists():
         data = plumed.read_as_pandas(str(colvar_path))
         time = data["time"].to_numpy()
@@ -128,12 +129,18 @@ def postprocessing(
         for cv_name, cv_meta in cv.items():
             if cv_name in data.columns:
                 cv_meta["values"] = data[cv_name].to_numpy()
+                if "bounds" not in cv_meta:
+                    cv_meta["bounds"] = (np.min(cv_meta["values"]), np.max(cv_meta["values"]))
             else:
                 warnings.warn(f"CV '{cv_name}' not found in COLVAR — skipping.", stacklevel=2)
 
+        # Energy
+        if "ene" in data.columns:
+            energy = data["ene"].to_numpy()
+
         # Weights
         if "opes.bias" in data.columns:
-            kbt = analyze.kbt_from_temp(temperature)
+            kbt = kbt_from_temp(temperature)
             log_weights = data["opes.bias"].to_numpy()
             weights = np.exp(log_weights / kbt)
 
@@ -148,9 +155,9 @@ def postprocessing(
     # -----------------------------------------------------------------------
     # Load ENERGY (optional)
     # -----------------------------------------------------------------------
-    energy_path = Path("ENERGY")
+    energy_path = Path(directory+"/ENERGY")
     if energy_path.exists():
-        e_mec, temp_arr = plumed.read_as_pandas(str(colvar_path)).to_numpy().T
+        time_info, e_mec, temp_arr = plumed.read_as_pandas(str(energy_path)).to_numpy().T
 
     # -----------------------------------------------------------------------
     # 1-D Trajectory figures (all CVs)
@@ -158,34 +165,42 @@ def postprocessing(
     for cv_key, cv_meta in cv.items():
         if "values" not in cv_meta:
             continue
-        fig = figures.trj(
+        fig = trj(
             time,
             cv_meta["values"],
-            log_weights=log_weights,
+            color_value=log_weights,
             label=cv_meta["label"],
             bounds=cv_meta["bounds"],
             time_unit=time_unit,
         )
         if save:
-            fig.savefig(f"trj_{cv_key}.png")
+            fig.savefig(f"{directory}/trj_{cv_key}.png")
+
+    if energy is not None:
+        fig = trj_energy(time, energy)
+        if save: fig.savefig(f"{directory}/trj_energy.svg")
+
+    if log_weights is not None:
+        fig = trj_bias(time, log_weights)
+        if save: fig.savefig(f"{directory}/trj_bias.svg")
 
     if all(arr is not None for arr in (rct, zed, n_eff, n_ker)):
-        fig = figures.trj_rct(time, rct)
-        if save: fig.savefig("trj_rct.svg")
+        fig = trj_rct(time, rct)
+        if save: fig.savefig(f"{directory}/trj_rct.svg")
 
-        fig = figures.trj_zed(time, zed)
-        if save: fig.savefig("trj_zed.svg")
+        fig = trj_zed(time, zed)
+        if save: fig.savefig(f"{directory}/trj_zed.svg")
 
-        fig = figures.trj_n(time, n_eff, n_ker)
-        if save: fig.savefig("trj_n.svg")
+        fig = trj_n(time, n_eff, n_ker)
+        if save: fig.savefig(f"{directory}/trj_n.svg")
 
     if e_mec is not None:
-        fig = figures.trj_energy(e_mec)
-        if save: fig.savefig("trj_energy.svg")
+        fig = trj_emec(time_info, e_mec)
+        if save: fig.savefig(f"{directory}/trj_emec.svg")
 
     if temp_arr is not None:
-        fig = figures.trj_temperature(temp_arr)
-        if save: fig.savefig("trj_temperature.svg")
+        fig = trj_temperature(time_info, temp_arr)
+        if save: fig.savefig(f"{directory}/trj_temperature.svg")
 
     # -----------------------------------------------------------------------
     # 2-D Trajectory figures
@@ -193,10 +208,10 @@ def postprocessing(
     for cv1_key, cv2_key in cv_2d:
         if "values" not in cv[cv1_key] or "values" not in cv[cv2_key]:
             continue
-        fig = figures.trj_2d(
+        fig = trj_2d(
             cv[cv1_key]["values"],
             cv[cv2_key]["values"],
-            log_weights=log_weights,
+            color_value=log_weights,
             cv1_label=cv[cv1_key]["label"],
             cv2_label=cv[cv2_key]["label"],
             cv1_bounds=cv[cv1_key]["bounds"],
@@ -205,7 +220,7 @@ def postprocessing(
             symmetric=symmetric,
         )
         if save:
-            fig.savefig(f"trj2d_{cv1_key}_{cv2_key}.png")
+            fig.savefig(f"{directory}/trj2d_{cv1_key}_{cv2_key}.png")
 
     # -----------------------------------------------------------------------
     # 1-D Density figures (all CVs)
@@ -213,16 +228,16 @@ def postprocessing(
     for cv_key, cv_meta in cv.items():
         if "values" not in cv_meta:
             continue
-        grid, dens = analyze.compute_density_1d(
+        grid, dens = compute_density_1d(
             cv_meta["values"],
             bounds=cv_meta["bounds"],
             temperature=temperature,
             num_samples=num_samples,
             bandwidth=bandwidth,
         )
-        fig = figures.density(grid, dens, label=cv_meta["label"], bounds=cv_meta["bounds"])
+        fig = density(grid, dens, label=cv_meta["label"], bounds=cv_meta["bounds"])
         if save:
-            fig.savefig(f"density_{cv_key}.svg")
+            fig.savefig(f"{directory}/density_{cv_key}.svg")
 
     # -----------------------------------------------------------------------
     # 2-D Density figures
@@ -230,7 +245,7 @@ def postprocessing(
     for cv1_key, cv2_key in cv_2d:
         if "values" not in cv[cv1_key] or "values" not in cv[cv2_key]:
             continue
-        grid, dens = analyze.compute_density_2d(
+        grid, dens = compute_density_2d(
             cv[cv1_key]["values"],
             cv[cv2_key]["values"],
             cv1_bounds=cv[cv1_key]["bounds"],
@@ -239,7 +254,7 @@ def postprocessing(
             num_samples=num_samples,
             bandwidth=bandwidth,
         )
-        fig = figures.density_2d(
+        fig = density_2d(
             grid, dens,
             cv1_label=cv[cv1_key]["label"],
             cv2_label=cv[cv2_key]["label"],
@@ -249,7 +264,7 @@ def postprocessing(
             symmetric=symmetric,
         )
         if save:
-            fig.savefig(f"density2d_{cv1_key}_{cv2_key}.svg")
+            fig.savefig(f"{directory}/density2d_{cv1_key}_{cv2_key}.svg")
 
     # -----------------------------------------------------------------------
     # 1-D FES figures
@@ -260,7 +275,7 @@ def postprocessing(
         cv_post = cv[cv_key]["values"][transient_idx:]
         w_post = weights[transient_idx:] if weights is not None else np.ones(len(cv_post))
 
-        grid, fes_vals, fes_err = analyze.compute_fes_1d(
+        grid, fes_vals, fes_err = compute_fes_1d(
             cv_post,
             bounds=cv[cv_key]["bounds"],
             weights=w_post,
@@ -270,7 +285,7 @@ def postprocessing(
             fes_units=fes_units,
             blocks=blocks,
         )
-        fig = figures.fes(
+        fig = fes(
             grid, fes_vals, fes_err,
             label=cv[cv_key]["label"],
             bounds=cv[cv_key]["bounds"],
@@ -278,7 +293,7 @@ def postprocessing(
             fes_units=fes_units,
         )
         if save:
-            fig.savefig(f"fes_{cv_key}.svg")
+            fig.savefig(f"{directory}/fes_{cv_key}.svg")
 
     # -----------------------------------------------------------------------
     # 2-D FES figures
@@ -290,7 +305,7 @@ def postprocessing(
         cv2_post = cv[cv2_key]["values"][transient_idx:]
         w_post = weights[transient_idx:] if weights is not None else np.ones(len(cv1_post))
 
-        grid, fes_vals, fes_err = analyze.compute_fes_2d(
+        grid, fes_vals, fes_err = compute_fes_2d(
             cv1_post, cv2_post,
             cv1_bounds=cv[cv1_key]["bounds"],
             cv2_bounds=cv[cv2_key]["bounds"],
@@ -302,7 +317,7 @@ def postprocessing(
             blocks=blocks,
         )
 
-        fig = figures.fes_2d(
+        fig = fes_2d(
             grid, fes_vals,
             cv1_label=cv[cv1_key]["label"],
             cv2_label=cv[cv2_key]["label"],
@@ -314,9 +329,9 @@ def postprocessing(
             symmetric=symmetric,
         )
         if save:
-            fig.savefig(f"fes2d_{cv1_key}_{cv2_key}.svg")
+            fig.savefig(f"{directory}/fes2d_{cv1_key}_{cv2_key}.svg")
 
-        fig = figures.fes_error_2d(
+        fig = fes_error_2d(
             grid, fes_err,
             cv1_label=cv[cv1_key]["label"],
             cv2_label=cv[cv2_key]["label"],
@@ -328,7 +343,7 @@ def postprocessing(
             symmetric=symmetric,
         )
         if save:
-            fig.savefig(f"feserr2d_{cv1_key}_{cv2_key}.svg")
+            fig.savefig(f"{directory}/feserr2d_{cv1_key}_{cv2_key}.svg")
 
     if show:
         plt.show()

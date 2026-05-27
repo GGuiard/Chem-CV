@@ -144,7 +144,7 @@ def compute_fes_1d(
     fes_values, grid, _, error = compute_fes(
         cv_filtered,
         temp=temperature,
-        fes_units=fes_units,
+        units=fes_units,
         num_samples=num_samples,
         bounds=bounds,
         bandwidth=bandwidth,
@@ -183,7 +183,6 @@ def compute_density_2d(
 
     fes_values, grid, _, _ = compute_fes(
         X,
-        fes_units="eV",
         kbt=kbt,
         num_samples=num_samples,
         bounds=[cv1_bounds, cv2_bounds],
@@ -224,7 +223,7 @@ def compute_fes_2d(
     fes_values, grid, _, error = compute_fes(
         X,
         temp=temperature,
-        fes_units=fes_units,
+        units=fes_units,
         num_samples=num_samples,
         bounds=[cv1_bounds, cv2_bounds],
         bandwidth=bandwidth,

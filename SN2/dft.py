@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-directory = "SN2"
+directory = "SN2/DFT_TS"
 os.chdir(directory)
 
 from ase.io import read, write
@@ -11,12 +11,12 @@ import contextlib
 
 from orca_parser import ChemCV
 
-traj = read("SAMPLING/sampling.xyz", ':', format="xyz")
+traj = read("../SAMPLING_TS/sampling.xyz", ':', format="xyz")
 
 for atoms in traj:
     atoms.positions -= atoms.get_center_of_mass()
 
-write("DFT/sampling.xyz", traj, format="xyz")
+write("sampling.xyz", traj, format="xyz")
 
 nb_traj = len(traj)
 
@@ -46,7 +46,7 @@ for atoms in tqdm(traj, desc=directory):
         with contextlib.redirect_stdout(devnull):
             with contextlib.redirect_stderr(devnull):
                 _ = atoms.get_potential_energy()
-                write("SN2/traj.xyz", atoms, append=True)
+                write("dft.xyz", atoms, append=True)
                 chemcv.update()
 
     subprocess.run("rm -rf ORCA", shell=True)

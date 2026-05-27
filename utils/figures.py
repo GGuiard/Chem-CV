@@ -60,7 +60,7 @@ def trj(
     cv: np.ndarray,
     label: str = "CV",
     color_value: np.ndarray | None = None,
-    color_label: str = "bias [eV]",
+    color_label: str = r"$\log(bias)$",
     bounds: tuple = (None, None),
     time_unit: str | None = "ps",
     scatter_size: float = 4.0,
@@ -94,12 +94,30 @@ def trj(
     return fig
 
 
+def trj_energy(time: np.ndarray, energy: np.ndarray) -> plt.Figure:
+    """Unbiased energy trajectory."""
+    fig, ax = plt.subplots(layout="constrained")
+    ax.plot(time, energy)
+    ax.set_xlabel("time [ps]")
+    ax.set_ylabel("E [eV]")
+    return fig
+
+
+def trj_bias(time: np.ndarray, logbias: np.ndarray) -> plt.Figure:
+    """Log of the OPES bias trajectory."""
+    fig, ax = plt.subplots(layout="constrained")
+    ax.plot(time, logbias)
+    ax.set_xlabel("time [ps]")
+    ax.set_ylabel(r"\log(bias)")
+    return fig
+
+
 def trj_rct(time: np.ndarray, rct: np.ndarray) -> plt.Figure:
     """OPES reweighting factor c(t) trajectory."""
     fig, ax = plt.subplots(layout="constrained")
     ax.plot(time, rct)
     ax.set_xlabel("time [ps]")
-    ax.set_ylabel(r"OPES rct")
+    ax.set_ylabel("OPES rct")
     return fig
 
 
@@ -108,7 +126,7 @@ def trj_zed(time: np.ndarray, zed: np.ndarray) -> plt.Figure:
     fig, ax = plt.subplots(layout="constrained")
     ax.plot(time, zed)
     ax.set_xlabel("time [ps]")
-    ax.set_ylabel(r"OPES zed")
+    ax.set_ylabel("OPES zed")
     return fig
 
 
@@ -123,32 +141,33 @@ def trj_n(time: np.ndarray, n_eff: np.ndarray, n_ker: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_energy(energy: np.ndarray) -> plt.Figure:
+def trj_emec(time: np.ndarray, emec: np.ndarray) -> plt.Figure:
     """
     Mechanical energy trajectory with mean ± std band.
 
     The first frame is discarded (often an outlier after equilibration).
     Plain scalar notation prevents matplotlib from adding an axis offset.
     """
-    energy = energy[1:]
-    mean, std = np.mean(energy), np.std(energy)
+    time = time[1:]
+    emec = emec[1:]
+    mean, std = np.mean(emec), np.std(emec)
 
     fig, ax = plt.subplots(layout="constrained")
     ax.fill_between(
-        np.arange(len(energy)),
+        time,
         mean - std,
         mean + std,
         alpha=0.20,
         linewidth=0,
     )
-    ax.plot(energy)
+    ax.plot(time, emec)
     ax.axhline(
         mean,
         linestyle="--",
         label=f"mean = {mean:.4g} eV"
     )
 
-    ax.set_xlabel("frame index")
+    ax.set_xlabel("time [ps]")
     ax.set_ylabel(r"$E_{mec}$ [eV]")
     ax.legend()
     ax.yaxis.set_major_formatter(mpl.ticker.ScalarFormatter(useOffset=False))
@@ -156,26 +175,26 @@ def trj_energy(energy: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_temperature(temperature: np.ndarray) -> plt.Figure:
+def trj_temperature(time: np.ndarray, temperature: np.ndarray) -> plt.Figure:
     """Temperature trajectory with mean ± std band."""
     mean, std = np.mean(temperature), np.std(temperature)
 
     fig, ax = plt.subplots(layout="constrained")
     ax.fill_between(
-        np.arange(len(temperature)),
+        time,
         mean - std,
         mean + std,
         alpha=0.20,
         linewidth=0,
     )
-    ax.plot(temperature)
+    ax.plot(time, temperature)
     ax.axhline(
         mean,
         linestyle="--",
         label=f"mean = {mean:.1f} K"
     )
 
-    ax.set_xlabel("frame index")
+    ax.set_xlabel("time [ps]")
     ax.set_ylabel("T [K]")
     ax.legend()
     return fig
@@ -187,7 +206,7 @@ def trj_2d(
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
     color_value: np.ndarray | None = None,
-    color_label: str = "bias [eV]",
+    color_label: str = r"$\log(bias)$",
     cv1_bounds: tuple = (None, None),
     cv2_bounds: tuple = (None, None),
     scatter_size: float = 4.0,

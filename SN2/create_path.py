@@ -11,7 +11,7 @@ from mace.calculators import mace_off
 
 import numpy as np
 import subprocess
-import figures
+import figures as figures
 
 subprocess.run("rm -f traj.xyz", shell=True)
 
