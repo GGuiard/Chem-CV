@@ -285,7 +285,7 @@ def density_2d(
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        density_values.T,
+        np.ma.masked_where(density_values==0, density_values),
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",
@@ -316,7 +316,6 @@ def fes(
     label: str = "CV",
     bounds: tuple = (None, None),
     fes_max: float | None = None,
-    fes_units: str = "eV",
 ) -> plt.Figure:
     """
     1-D free-energy surface with optional error band.
@@ -326,18 +325,18 @@ def fes(
     if isinstance(fes_error, np.ndarray):
         ax.fill_between(
             grid,
-            fes_values - fes_error,
-            fes_values + fes_error,
+            fes_values - 10*fes_error,
+            fes_values + 10*fes_error,
             alpha=0.25,
             linewidth=0,
-            label=r"$\pm 1 \sigma$ (block)",
+            label=r"$\pm 10 \sigma$ (bootstrap)",
         )
         ax.legend()
 
     ax.plot(grid, fes_values)
     ax.set_xlabel(label)
     ax.set_xlim(bounds)
-    ax.set_ylabel(f"FES [{fes_units}]")
+    ax.set_ylabel(f"FES [eV]")
     ax.set_ylim(bottom=0, top=fes_max)
     return fig
 
@@ -351,7 +350,6 @@ def fes_2d(
     cv2_bounds: tuple = (None, None),
     fes_max: float | None = None,
     nb_levels: int = 11,
-    fes_units: str | None = "eV",
     symmetric: bool = False,
 ) -> plt.Figure:
     """2-D free-energy surface."""
@@ -361,7 +359,7 @@ def fes_2d(
     im = ax.contourf(grid[0], grid[1], fes_values, levels, cmap=cm_fessa)
 
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(f"FES [{fes_units}]" if fes_units else "FES")
+    cbar.set_label(f"FES [eV]")
 
     ax.set_xlabel(cv1_label)
     ax.set_ylabel(cv2_label)
@@ -381,7 +379,6 @@ def fes_error_2d(
     cv2_bounds: tuple = (None, None),
     error_min: float | None = None,
     error_max: float | None = None,
-    fes_units: str = "eV",
     symmetric: bool = False,
 ) -> plt.Figure:
     """
@@ -394,7 +391,7 @@ def fes_error_2d(
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        fes_error.T,
+        np.ma.masked_invalid(fes_error),
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",
@@ -405,7 +402,7 @@ def fes_error_2d(
     )
     
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(f"FES error [{fes_units}]" if fes_units else "FES error")
+    cbar.set_label(f"FES error [eV]")
 
     ax.set_xlabel(cv1_label)
     ax.set_ylabel(cv2_label)
