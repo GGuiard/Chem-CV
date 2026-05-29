@@ -132,14 +132,13 @@ def postprocessing(
                 warnings.warn(f"CV '{cv_name}' not found in COLVAR — skipping.", stacklevel=2)
 
         # Energy
-        if "ene" in data.columns:
-            energy = data["ene"].to_numpy()
-        else:
-            energy = None
+        # if "ene" in data.columns:
+        #     energy = data["ene"].to_numpy()
+        # else:
+        #     energy = None
 
         # Weights
         if "opes.bias" in data.columns:
-            kbt = kbt_from_temp(temperature)
             bias = data["opes.bias"].to_numpy()
 
         # OPES diagnostics.
@@ -153,9 +152,9 @@ def postprocessing(
     # -----------------------------------------------------------------------
     # Load ENERGY (optional)
     # -----------------------------------------------------------------------
-    energy_path = Path(directory+"/ENERGY")
-    if energy_path.exists():
-        time_info, e_mec, temp_arr = plumed.read_as_pandas(str(energy_path)).to_numpy().T
+    # energy_path = Path(directory+"/ENERGY")
+    # if energy_path.exists():
+    #     time_info, e_mec, temp_arr = plumed.read_as_pandas(str(energy_path)).to_numpy().T
 
     # -----------------------------------------------------------------------
     # 1-D Trajectory figures (all CVs)
@@ -174,9 +173,9 @@ def postprocessing(
         if save:
             fig.savefig(f"{directory}/trj_{cv_key}.png")
 
-    if energy is not None:
-        fig = trj_energy(time, energy)
-        if save: fig.savefig(f"{directory}/trj_energy.svg")
+    # if energy is not None:
+    #     fig = trj_energy(time, energy)
+    #     if save: fig.savefig(f"{directory}/trj_energy.svg")
 
     if bias is not None:
         fig = trj_bias(time, bias)
@@ -192,13 +191,13 @@ def postprocessing(
         fig = trj_n(time, n_eff, n_ker)
         if save: fig.savefig(f"{directory}/trj_n.svg")
 
-    if e_mec is not None:
-        fig = trj_emec(time_info, e_mec)
-        if save: fig.savefig(f"{directory}/trj_emec.svg")
+    # if e_mec is not None:
+    #     fig = trj_emec(time_info, e_mec)
+    #     if save: fig.savefig(f"{directory}/trj_emec.svg")
 
-    if temp_arr is not None:
-        fig = trj_temperature(time_info, temp_arr)
-        if save: fig.savefig(f"{directory}/trj_temperature.svg")
+    # if temp_arr is not None:
+    #     fig = trj_temperature(time_info, temp_arr)
+    #     if save: fig.savefig(f"{directory}/trj_temperature.svg")
 
     # -----------------------------------------------------------------------
     # 2-D Trajectory figures
