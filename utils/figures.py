@@ -285,7 +285,7 @@ def density_2d(
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        np.ma.masked_where(density_values==0, density_values),
+        np.ma.masked_where(density_values==0, density_values).T,
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",
@@ -356,7 +356,7 @@ def fes_2d(
     fig, ax = plt.subplots(layout="constrained")
 
     levels = np.linspace(0, fes_max, nb_levels) if fes_max else nb_levels
-    im = ax.contourf(grid[0], grid[1], fes_values, levels, cmap=cm_fessa)
+    im = ax.contourf(grid[0], grid[1], fes_values.T, levels, cmap=cm_fessa)
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(f"FES [eV]")
@@ -391,7 +391,7 @@ def fes_error_2d(
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        np.ma.masked_invalid(fes_error),
+        np.ma.masked_invalid(fes_error).T,
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",

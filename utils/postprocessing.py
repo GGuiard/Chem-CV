@@ -160,65 +160,65 @@ def postprocessing(
     # -----------------------------------------------------------------------
     # 1-D Trajectory figures (all CVs)
     # -----------------------------------------------------------------------
-    # for cv_key, cv_meta in cv.items():
-    #     if "values" not in cv_meta:
-    #         continue
-    #     fig = trj(
-    #         time=time,
-    #         cv=cv_meta["values"],
-    #         color_value=bias,
-    #         label=cv_meta["label"],
-    #         bounds=cv_meta["bounds"],
-    #         time_unit=time_unit,
-    #     )
-    #     if save:
-    #         fig.savefig(f"{directory}/trj_{cv_key}.png")
+    for cv_key, cv_meta in cv.items():
+        if "values" not in cv_meta:
+            continue
+        fig = trj(
+            time=time,
+            cv=cv_meta["values"],
+            color_value=bias,
+            label=cv_meta["label"],
+            bounds=cv_meta["bounds"],
+            time_unit=time_unit,
+        )
+        if save:
+            fig.savefig(f"{directory}/trj_{cv_key}.png")
 
-    # if energy is not None:
-    #     fig = trj_energy(time, energy)
-    #     if save: fig.savefig(f"{directory}/trj_energy.svg")
+    if energy is not None:
+        fig = trj_energy(time, energy)
+        if save: fig.savefig(f"{directory}/trj_energy.svg")
 
-    # if bias is not None:
-    #     fig = trj_bias(time, bias)
-    #     if save: fig.savefig(f"{directory}/trj_bias.svg")
+    if bias is not None:
+        fig = trj_bias(time, bias)
+        if save: fig.savefig(f"{directory}/trj_bias.svg")
 
-    # if all(arr is not None for arr in (rct, zed, n_eff, n_ker)):
-    #     fig = trj_rct(time, rct)
-    #     if save: fig.savefig(f"{directory}/trj_rct.svg")
+    if all(arr is not None for arr in (rct, zed, n_eff, n_ker)):
+        fig = trj_rct(time, rct)
+        if save: fig.savefig(f"{directory}/trj_rct.svg")
 
-    #     fig = trj_zed(time, zed)
-    #     if save: fig.savefig(f"{directory}/trj_zed.svg")
+        fig = trj_zed(time, zed)
+        if save: fig.savefig(f"{directory}/trj_zed.svg")
 
-    #     fig = trj_n(time, n_eff, n_ker)
-    #     if save: fig.savefig(f"{directory}/trj_n.svg")
+        fig = trj_n(time, n_eff, n_ker)
+        if save: fig.savefig(f"{directory}/trj_n.svg")
 
-    # if e_mec is not None:
-    #     fig = trj_emec(time_info, e_mec)
-    #     if save: fig.savefig(f"{directory}/trj_emec.svg")
+    if e_mec is not None:
+        fig = trj_emec(time_info, e_mec)
+        if save: fig.savefig(f"{directory}/trj_emec.svg")
 
-    # if temp_arr is not None:
-    #     fig = trj_temperature(time_info, temp_arr)
-    #     if save: fig.savefig(f"{directory}/trj_temperature.svg")
+    if temp_arr is not None:
+        fig = trj_temperature(time_info, temp_arr)
+        if save: fig.savefig(f"{directory}/trj_temperature.svg")
 
     # -----------------------------------------------------------------------
     # 2-D Trajectory figures
     # -----------------------------------------------------------------------
-    # for cv1_key, cv2_key in cv_2d:
-    #     if "values" not in cv[cv1_key] or "values" not in cv[cv2_key]:
-    #         continue
-    #     fig = trj_2d(
-    #         cv1=cv[cv1_key]["values"],
-    #         cv2=cv[cv2_key]["values"],
-    #         color_value=bias,
-    #         cv1_label=cv[cv1_key]["label"],
-    #         cv2_label=cv[cv2_key]["label"],
-    #         cv1_bounds=cv[cv1_key]["bounds"],
-    #         cv2_bounds=cv[cv2_key]["bounds"],
-    #         scatter_size=scatter_size,
-    #         symmetric=symmetric,
-    #     )
-    #     if save:
-    #         fig.savefig(f"{directory}/trj2d_{cv1_key}_{cv2_key}.png")
+    for cv1_key, cv2_key in cv_2d:
+        if "values" not in cv[cv1_key] or "values" not in cv[cv2_key]:
+            continue
+        fig = trj_2d(
+            cv1=cv[cv1_key]["values"],
+            cv2=cv[cv2_key]["values"],
+            color_value=bias,
+            cv1_label=cv[cv1_key]["label"],
+            cv2_label=cv[cv2_key]["label"],
+            cv1_bounds=cv[cv1_key]["bounds"],
+            cv2_bounds=cv[cv2_key]["bounds"],
+            scatter_size=scatter_size,
+            symmetric=symmetric,
+        )
+        if save:
+            fig.savefig(f"{directory}/trj2d_{cv1_key}_{cv2_key}.png")
 
     # -----------------------------------------------------------------------
     # 1-D Density figures (all CVs)
