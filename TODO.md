@@ -4,104 +4,134 @@ This file compiles the different things to do for the advancement of the project
 
 Overall the code need more comments, at least for the functions, with specified argument type.
 
+## Overall
 
----
-
-### Overall
 - [ ] More comments
 - [ ] Docstrings for file, functions, objects and the arguments type
-- [ ] python file for general functions and notebook for system specific things
-- [ ] change overall architecture to split tasks into subfolders
-- [ ] take care of path management
-- [ ] save every self sufficient data in the subfolder associated to one's task
-- [ ] take care of issues of saving and use with simple .xyz or advanced .extyz with cell and pbc for GNNs
+- [ ] Python file for general functions and notebook for system specific things
+- [ ] Change overall architecture to split tasks into subfolders
+- [ ] Take care of path management
+- [ ] Save every self sufficient data in the subfolder associated to one's task
+- [ ] Clean the repository, make an official version
+- [ ] Save my_ase, my_mlcolvar, ExtraCV, ChemCV, MD-utils to other github repositories
+
+- [ ] Export model with torch.export.export
+- [ ] Take care of issues of saving and use with simple .xyz or advanced .extyz with cell and pbc for GNNs and be careful with removing the constrains
+- [ ] Flush data to prevent crashing issues and memory surloading
+
+## Markdowns
 
 ### INSTALLATION.md
 
-- [ ] Change export PYTHONPATH in ~/.bashrc to a more secure option
-- [ ] Make different python file reusable for different systems so that to not have to copy them and update them
+- [ ] Use sourceme instead of bashrc
+- [ ] Use conda torch instead of libtorch for PLUMED
+- [ ] Make bash installation instructions
 
-### main.py
+### README.md
 
-- [ ] Globally add another main for restart and be carefull of traj
-- [X] Make the OPES_METAD_EXPLORE works
-- [X] Save E and T somewhere accessible for the postprocessing script
+- [ ] Add context
+- [ ] Add a navigation
+- [ ] Add figures
+- [ ] Show a schematic of the pipeline
+
+## utils
+
+- [ ] Rename to MD-utils
+- [ ] Import function from submodules instead of the whole submodule
+- [ ] Make installable with pip
+
+### md_runner.py
+
+- [ ] Implement easy restart, autodetected, with backups
 
 ### postprocessing.py
 
-- [ ] Change fes calculation to the one of mlcolvar for KDE and better errors
-- [ ] Automatically adapt what is ploted from what is available using try
-- [ ] Change postprocessing.py to a overall general function
-- [X] Give the possibility to save the figures into another named folder with premade names
-- [X] Either wrap positions in traj or change something in chemiscope
+- [ ] Restrict the fes to the sampled points (density>0.01)
+- [ ] Set an fps option for chemiscope
+- [ ] Set a trajectory stride option or by default infer it from the relative sizes of COLVAR and trajectory
+- [ ] Set an "input" option for the transient where it is asked after showing the relevant trajectories
+- [ ] The transient can be passed in percentage (float) or in a frame number (int)
+- [ ] Set start and end options for chemiscope
 
 ### analyze.py
 
-- [ ] change bootstrap and block for better error accounting for w_block
-- [X] Better implement kde pop while keeping the possibility to use normal pop
-- [X] Correct cum_av with weight
-- [ ] Make functions understand that they need to use a parameter only if its given (ex: weights, masks, 2D)
-- [ ] For bootstrap and block add the possibility to choose specify a function to apply to the data
-- [ ] Generalize bootstrap block and pop to N dim
+- [ ] Compute the population and density using KDE instead of gaussian filter
+- [ ] Compute the FES from STATES
+- [ ] Compute boostrap error without smoothing and then smooth it
+- [ ] Generalize functions for any dimension
+- [ ] Change sigma to a bandwidth independant of the grid
 
 ### figures.py
 
-- [ ] Make plots more versatiles
-- [ ] Use fessa
-- [~] Adapt radius in chemiscope plots using CR from ASE (reference in DEAL repo of LB)
-- [ ] Make plot with sampling superimposed on fes 2d (maybe with charge)
-- [ ] Visualize STATES file and FES from STATES
-- [X] Setup save options, location, name, dpi, transparent...
-- [X] Add color to 2D trj plots
-- [ ] Make plots to show where the bias is added and what it looks like
+- [ ] Set a maximum number of points to be plotted for trajectories
+- [ ] Make a plot of the log of the bias along the CV used for biasing and superimpose the FES
+- [ ] Make a plot showing the distribution of points with energy and their associated log bias
+- [ ] Make chemiscope more versatile passing structures and a dictionary, certain entries can be specified for x, y, coloring, atoms, bonds, gradient...
+- [ ] Add an fps option for chemiscope and change its default value to 20
+- [ ] Set a maximum number of point for chemiscope and by default strides the structures until getting this maximum number
+- [ ] Add the option in chemiscope to wrap the structures in the cell, center them, orient them for visualization purposes
 - [ ] Make multiple plots with all the trj, all the fes
-- [X] Fix min and max of colorbar in charge plot
-- [ ] Add possibility to change bond color in chemiscope
 
-### init_system.py
+### helpers.py
 
-- [ ] Find a way to add depth to the cell as wanted
+- [ ] Implement a function to sample a trajectory according to the value of the FES or using the kernels in states
 
-### charge.py
+## orca_parser
 
-- [ ] See if it is possible to get charges for multiples atoms, with GPU parallelization
-- [ ] Reduce memory surloading
+- [ ] Rename it for ChemCV
+- [ ] Import function from submodules instead of the whole submodule
+- [ ] Make installable with pip
+- [ ] Be compatible for different specified parser (even if ORCA is the only one available)
+- [ ] The parser should extract the descriptors which are represented in a tree way, while ChemCV make a few combinations of them
+- [ ] Implement a module for basic modeling
 
-### mlcharge.py
+### orca_parser.py
 
-- [ ] Export model with torch.export.export
-- [ ] Implement other descriptors as : LOCAL_CRISTALINITY, CONTACTMAP, KDE of DISTANCE
-- [X] Predict the charge using a GNN
-- [ ] Find a better way to sample a trajectory (using STATES ?)
-
-### create_traj.py
-
-- [X] Use NEB from reactant to products
-- [ ] Add a little bit of noise
-
-### ChemCV.py
-
-- [ ] add possibility to give kwargs in chemcv selection
-- [ ] update in a way that append a txt file to have backups
-
-### dft.py
-
-- [ ] save energy and force in a xyz file (appended)
-- [X] Make a change so that each ORCA output can be saved in different directories
-
-### orca_parser
-
-- [X] Add options to group together orbitals of same n and l or even of same n
-- [ ] Add possibility to choose options for chemcv (atoms, bonds, ao, mo...) globally and/or for each chemcv
-- [X] Add threshold when relevant (p_AtMO), (like post-processing removal of zeros chemcvs)
-- [ ] Add LED, NAO, NBO, ETS-NOCV, dot product HOMO/LUMO
+- [ ] Add LED, NAO, NBO, ETS-NOCV, dot product HOMO/LUMO, groups and MO specific bond order
 - [ ] Change regex to make it more readable
-- [ ] Change ChemCV so that it can be changed or copied in a way that adapt the active_chemcvs, their options, and the treeframe 
-- [X] Regroup save and load for json and hdf5 with an auto-mode
-- [X] Save and load active_chemcv
-- [X] Split into two objects: a multi-index dataframe with all its changes and the chemcv
-- [X] Change update so that a directory can be specified
-- [X] Move parsing functions to another file (as well as the available chemcv dictionary ?)
-- [X] Make the dataframe initialize on the first update (and on other updates if new indexes are discovered it should either create new columns and complete them with 0 or raise a warning)
-- [X] Make parsing functions return (MD) dictionnary
-- [X] Make a greedy or tolerant option which respectively decides if an absent index should mean the deletion of a column and if a new index should mean the creation of a column
+
+## my_ase
+
+- [X] Changed the plumed calculator to convert the potential energy to float but the change should be made in franken
+
+## my_mlcolvar
+
+- [ ] Implement a premade plot which for a dataset or datamodule and a model show the reference over prediction graph and giving the MAE and RMSE (separating the training, validation and test datasets if presents)
+
+### plumed_interfaces
+
+- [X] Changed PytorchModelGNN.cpp to always implement edge_masks_lr but the change it should be optional
+- [ ] Check the unit compatibility between the topology, the ase atoms, the plumed instructions, the model and the plumed interface
+
+### mlcolvar.core.nn.graph.gnn.py
+
+- [X] Added custom pooling for antisymmetric graph label prediction
+- [ ] Add a way to specify atomic coefficients for the pooling
+- [ ] Implement compatibility with a NN converting atomic nodes values to a graph label for regression tasks
+- [X] Added a selection pooling returning the node values of the selected system only
+
+### mlcolvar.data.graph.utils.py
+
+- [X] Changed the default value of the weights in a graph dataset to a tensor
+- [ ] Remove system_masks, subsystem_masks, edge_masks_lr from the default dataset construction
+- [ ] Check compatibility between dataset, datamodule, configurations, graph tracing example and the plumed interface for GNN in term of weights, environment, system, subsystem, edge_maks_lr...
+- [ ] Change the datamodule implementation or add a quick function to get the training, validation and test inputs and targets more easily
+
+### mlcolvar.utils.fes.py
+
+- [ ] Correct numerical approximation error when taking the kde with very small weights line 228
+- [ ] Add the option to reduce the FES to the region explored, with a relative kde population above 0.01
+- [ ] Implement bootstrap computation of the error
+
+### mlcolvar.utils.plot.py
+
+- [ ] Correct issues with already imported cmaps
+
+### mlcolvar.utils.io.graphs.ase_.py
+
+- [X] Corrected a typo in the comment line 265 : indeces -> indices
+
+### mlcolvar.utils.io.graphs.common.py
+
+- [X] Corrected a typo in the create_dataset_from_trajectories docstring line 109: system_selection appeared twice and was replaced on second occurence by subsystem_selection
+- [X] Corrected a typo in the issue raised lin 152: wwhen -> when

@@ -270,10 +270,7 @@ def density_2d(
     density_values: np.ndarray,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
-    cv1_bounds: tuple = (None, None),
-    cv2_bounds: tuple = (None, None),
-    density_min: float | None = None,
-    density_max: float = 1.0,
+    density_min: float = 0.01,
     symmetric: bool = False,
 ) -> plt.Figure:
     """
@@ -281,17 +278,14 @@ def density_2d(
     """
     fig, ax = plt.subplots(layout="constrained")
 
-    vmin = density_min if density_min is not None else 0.0
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        np.ma.masked_where(density_values==0, density_values).T,
+        np.ma.masked_where(density_values<=density_min, density_values).T,
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",
         cmap=cm_fessa,
-        vmin=vmin,
-        vmax=density_max,
         interpolation="bicubic",
     )
     
@@ -300,8 +294,6 @@ def density_2d(
 
     ax.set_xlabel(cv1_label)
     ax.set_ylabel(cv2_label)
-    ax.set_xlim(cv1_bounds)
-    ax.set_ylim(cv2_bounds)
     return fig
 
 
@@ -325,19 +317,19 @@ def fes(
     if isinstance(fes_error, np.ndarray):
         ax.fill_between(
             grid,
-            fes_values - 10*fes_error,
-            fes_values + 10*fes_error,
+            fes_values - fes_error,
+            fes_values + fes_error,
             alpha=0.25,
             linewidth=0,
-            label=r"$\pm 10 \sigma$ (bootstrap)",
+            label=r"$\pm \sigma$ (bootstrap)",
         )
-        ax.legend()
+        # ax.legend()
 
     ax.plot(grid, fes_values)
     ax.set_xlabel(label)
     ax.set_xlim(bounds)
     ax.set_ylabel(f"FES [eV]")
-    ax.set_ylim(bottom=0, top=fes_max)
+    ax.set_ylim(np.min(fes_values), fes_max)
     return fig
 
 
@@ -346,25 +338,29 @@ def fes_2d(
     fes_values: np.ndarray,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
-    cv1_bounds: tuple = (None, None),
-    cv2_bounds: tuple = (None, None),
     fes_max: float | None = None,
-    nb_levels: int = 11,
     symmetric: bool = False,
 ) -> plt.Figure:
     """2-D free-energy surface."""
     fig, ax = plt.subplots(layout="constrained")
 
-    levels = np.linspace(0, fes_max, nb_levels) if fes_max else nb_levels
-    im = ax.contourf(grid[0], grid[1], fes_values.T, levels, cmap=cm_fessa)
+    if fes_max is None: fes_max = np.max(fes_values)
+    extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
+
+    im = ax.imshow(
+        np.ma.masked_where(fes_values>=fes_max, fes_values).T,
+        origin="lower",
+        extent=extent,
+        aspect="equal" if symmetric else "auto",
+        cmap=cm_fessa,
+        interpolation="bicubic",
+    )
 
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(f"FES [eV]")
 
     ax.set_xlabel(cv1_label)
     ax.set_ylabel(cv2_label)
-    ax.set_xlim(cv1_bounds)
-    ax.set_ylim(cv2_bounds)
     if symmetric:
         ax.set_aspect("equal", "box")
     return fig
@@ -375,10 +371,6 @@ def fes_error_2d(
     fes_error: np.ndarray,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
-    cv1_bounds: tuple = (None, None),
-    cv2_bounds: tuple = (None, None),
-    error_min: float | None = None,
-    error_max: float | None = None,
     symmetric: bool = False,
 ) -> plt.Figure:
     """
@@ -386,8 +378,6 @@ def fes_error_2d(
     """
     fig, ax = plt.subplots(layout="constrained")
 
-    vmin = error_min if error_min is not None else 0.0
-    vmax = error_max if error_max is not None else float(np.nanmax(fes_error))
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
@@ -396,8 +386,6 @@ def fes_error_2d(
         extent=extent,
         aspect="equal" if symmetric else "auto",
         cmap=cm_fessa,
-        vmin=vmin,
-        vmax=vmax,
         interpolation="bicubic",
     )
     
@@ -406,8 +394,6 @@ def fes_error_2d(
 
     ax.set_xlabel(cv1_label)
     ax.set_ylabel(cv2_label)
-    ax.set_xlim(cv1_bounds)
-    ax.set_ylim(cv2_bounds)
     if symmetric:
         ax.set_aspect("equal", "box")
     return fig

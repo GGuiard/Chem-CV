@@ -13,6 +13,8 @@
 __pycache__/
 /my_mlcolvar/
 /my_ase/
-test/
-Fe111-N2-lammps/
+/tests/
+/backups/
+/tmp/
 lightning_logs/
+comments.md
