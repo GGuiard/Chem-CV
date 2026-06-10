@@ -31,11 +31,12 @@ def bounds_from_cv(
     cv: np.ndarray[float],
     bounds: tuple[float | None]
 ) -> tuple[float]:
-    if bounds[0] is None:
-        bounds[0] = np.min(cv)
-    if bounds[1] is None:
-        bounds[1] = np.max(cv)
-    return bounds
+    new_bounds = [bounds[0], bounds[1]]
+    if new_bounds[0] is None:
+        new_bounds[0] = np.min(cv)
+    if new_bounds[1] is None:
+        new_bounds[1] = np.max(cv)
+    return new_bounds
 
 
 def bins_from_bounds(
@@ -55,7 +56,7 @@ def compute_density_1d(
     cv: np.ndarray,
     bounds: tuple = (None, None),
     num_samples: int = 1000,
-    sigma: float = 20.,
+    bandwidth: float = 0.02,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute an unweighted 1-D probability density via KDE.
@@ -67,6 +68,8 @@ def compute_density_1d(
     """
     bounds = bounds_from_cv(cv, bounds)
     bins, grid = bins_from_bounds(bounds, num_samples)
+
+    sigma = bandwidth * num_samples
 
     density = np.histogram(cv, bins)[0]
     if sigma != 0.0: density = gaussian_filter(density, sigma)
@@ -81,7 +84,7 @@ def compute_density_2d(
     cv1_bounds: tuple = (None, None),
     cv2_bounds: tuple = (None, None),
     num_samples: int = 1000,
-    sigma: float = 20.,
+    bandwidth: float = 0.02,
 ) -> tuple[list[np.ndarray], np.ndarray]:
     """
     Compute an unweighted 2-D probability density via KDE.
@@ -96,6 +99,8 @@ def compute_density_2d(
     bins_cv1, grid_cv1 = bins_from_bounds(cv1_bounds, num_samples)
     bins_cv2, grid_cv2 = bins_from_bounds(cv2_bounds, num_samples)
     bins, grid = [bins_cv1, bins_cv2], [grid_cv1, grid_cv2]
+
+    sigma = bandwidth * num_samples
 
     density = np.histogram2d(cv1, cv2, bins)[0]
     if sigma != 0.0: density = gaussian_filter(density, sigma)
@@ -114,7 +119,7 @@ def compute_fes_1d(
     bounds: tuple = (None, None),
     temperature: float = 300.0,
     num_samples: int = 1000,
-    sigma: float = 20.,
+    bandwidth: float = 0.02,
     nb_bootstraps: int = 100,
     bootstrap_rng = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -129,8 +134,6 @@ def compute_fes_1d(
     temperature : Temperature in Kelvin.
     num_samples : Number of KDE grid points.
     bandwidth   : KDE bandwidth.
-    fes_units   : Output energy unit string passed to compute_fes.
-    blocks      : Number of blocks for bootstrap error estimation.
 
     Returns
     -------
@@ -142,6 +145,8 @@ def compute_fes_1d(
     bins, grid = bins_from_bounds(bounds, num_samples)
 
     kbt = kbt_from_temp(temperature)
+
+    sigma = bandwidth * num_samples
 
     log_weights  = bias / kbt
     log_weights -= log_weights.max()
@@ -155,19 +160,17 @@ def compute_fes_1d(
     lw_sorted = log_weights[order]
 
     splits = np.flatnonzero(np.diff(bi_sorted)) + 1
-    for chunk_lw, bin_id in zip(np.split(lw_sorted, splits),
-                                bi_sorted[np.r_[0, splits]]):
-        if 0 <= bin_id < n_bins:
-            log_pop[bin_id] = np.logaddexp.reduce(chunk_lw)
+    for chunk_lw, bin_id in zip(np.split(lw_sorted, splits), bi_sorted[np.r_[0, splits]]):
+        if 0 <= bin_id < n_bins: log_pop[bin_id] = np.logaddexp.reduce(chunk_lw)
 
     prob = np.exp(log_pop)
 
-    if sigma != 0.0: prob = gaussian_filter(prob, sigma=sigma)
+    if sigma != 0.0: prob = gaussian_filter(prob, sigma)
     fes = -kbt * np.ma.log(prob)
     fes -= np.min(fes[np.isfinite(fes)])
 
     if nb_bootstraps==0:
-        return grid, fes
+        return grid, fes, np.zeros(fes.shape)
 
     rng = np.random.default_rng(bootstrap_rng)
     indices = rng.permutation(len(cv))
@@ -188,19 +191,17 @@ def compute_fes_1d(
         lw_sorted = log_weights[order]
 
         splits = np.flatnonzero(np.diff(bi_sorted)) + 1
-        for chunk_lw, bin_id in zip(np.split(lw_sorted, splits),
-                                    bi_sorted[np.r_[0, splits]]):
-            if 0 <= bin_id < n_bins:
-                log_pop[bin_id] = np.logaddexp.reduce(chunk_lw)
+        for chunk_lw, bin_id in zip(np.split(lw_sorted, splits), bi_sorted[np.r_[0, splits]]):
+            if 0 <= bin_id < n_bins: log_pop[bin_id] = np.logaddexp.reduce(chunk_lw)
 
         bootstrap_prob = np.exp(log_pop)
 
-        # if sigma != 0.0: bootstrap_prob = gaussian_filter(bootstrap_prob, sigma=sigma)
         bootstrap_fes = -kbt * np.ma.log(bootstrap_prob)
         bootstrap_fes -= np.min(bootstrap_fes)
         bootstraps_fes.append(bootstrap_fes)
 
-    err = np.std(bootstraps_fes, axis=0) / np.sqrt(nb_bootstraps)
+    err = np.ma.std(bootstraps_fes, axis=0) / np.sqrt(nb_bootstraps)
+    if sigma != 0.0: err = gaussian_filter(err, sigma)
 
     return grid, fes, err
 
@@ -213,7 +214,7 @@ def compute_fes_2d(
     cv2_bounds: tuple = (None, None),
     temperature: float = 300.0,
     num_samples: int = 1000,
-    sigma: float = 20.,
+    bandwidth: float = 0.02,
     nb_bootstraps: int = 100,
     bootstrap_rng = None,
 ) -> tuple[list[np.ndarray], np.ndarray, np.ndarray]:
@@ -233,6 +234,8 @@ def compute_fes_2d(
     bins, grid = [bins_cv1, bins_cv2], [grid_cv1, grid_cv2]
 
     kbt = kbt_from_temp(temperature)
+
+    sigma = bandwidth * num_samples
     
     log_weights  = bias / kbt
     log_weights -= log_weights.max()
@@ -254,19 +257,18 @@ def compute_fes_2d(
 
     log_pop = np.full((nx, ny), -np.inf)
     splits  = np.flatnonzero(np.diff(flat_sorted)) + 1
-    for chunk_lw, fid in zip(np.split(lw_sorted, splits),
-                            flat_sorted[np.r_[0, splits]]):
+    for chunk_lw, fid in zip(np.split(lw_sorted, splits), flat_sorted[np.r_[0, splits]]):
         i, j = divmod(fid, ny)
         log_pop[i, j] = np.logaddexp.reduce(chunk_lw)
 
     prob = np.exp(log_pop)
 
-    if sigma != 0.0: prob = gaussian_filter(prob, sigma=sigma)
+    if sigma != 0.0: prob = gaussian_filter(prob, sigma)
     fes = -kbt * np.ma.log(prob)
     fes -= np.min(fes)
 
     if nb_bootstraps==0:
-        return grid, fes
+        return grid, fes, np.zeros(fes.shape)
 
     rng = np.random.default_rng(bootstrap_rng)
     indices = rng.permutation(len(cv1))
@@ -295,18 +297,17 @@ def compute_fes_2d(
 
         log_pop = np.full((nx, ny), -np.inf)
         splits  = np.flatnonzero(np.diff(flat_sorted)) + 1
-        for chunk_lw, fid in zip(np.split(lw_sorted, splits),
-                                flat_sorted[np.r_[0, splits]]):
+        for chunk_lw, fid in zip(np.split(lw_sorted, splits), flat_sorted[np.r_[0, splits]]):
             i, j = divmod(fid, ny)
             log_pop[i, j] = np.logaddexp.reduce(chunk_lw)
 
         bootstrap_prob = np.exp(log_pop)
 
-        if sigma != 0.0: bootstrap_prob = gaussian_filter(bootstrap_prob, sigma=sigma)
         bootstrap_fes = -kbt * np.ma.log(bootstrap_prob)
         bootstrap_fes -= np.min(bootstrap_fes)
         bootstraps_fes.append(bootstrap_fes)
 
-    err = np.std(bootstraps_fes, axis=0) / np.sqrt(nb_bootstraps)
+    err = np.ma.std(bootstraps_fes, axis=0) / np.sqrt(nb_bootstraps)
+    if sigma != 0.0: err = gaussian_filter(err, sigma)
 
     return grid, fes, err

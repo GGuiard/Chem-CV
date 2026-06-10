@@ -46,30 +46,30 @@ Overall the code need more comments, at least for the functions, with specified 
 
 ### postprocessing.py
 
-- [ ] Restrict the fes to the sampled points (density>0.01)
-- [ ] Set an fps option for chemiscope
-- [ ] Set a trajectory stride option or by default infer it from the relative sizes of COLVAR and trajectory
-- [ ] Set an "input" option for the transient where it is asked after showing the relevant trajectories
+- [X] Restrict the fes to the sampled points (density>0.01)
+- [X] Set an fps option for chemiscope
+- [X] Set a trajectory stride option or by default infer it from the relative sizes of COLVAR and trajectory
+- [X] Set an "input" option for the transient where it is asked after showing the relevant trajectories
 - [ ] The transient can be passed in percentage (float) or in a frame number (int)
-- [ ] Set start and end options for chemiscope
+- [X] Set start and end options for chemiscope
 
 ### analyze.py
 
 - [ ] Compute the population and density using KDE instead of gaussian filter
 - [ ] Compute the FES from STATES
-- [ ] Compute boostrap error without smoothing and then smooth it
+- [X] Compute boostrap error without smoothing and then smooth it
 - [ ] Generalize functions for any dimension
-- [ ] Change sigma to a bandwidth independant of the grid
+- [X] Change sigma to a bandwidth independant of the grid
 
 ### figures.py
 
-- [ ] Set a maximum number of points to be plotted for trajectories
-- [ ] Make a plot of the log of the bias along the CV used for biasing and superimpose the FES
-- [ ] Make a plot showing the distribution of points with energy and their associated log bias
-- [ ] Make chemiscope more versatile passing structures and a dictionary, certain entries can be specified for x, y, coloring, atoms, bonds, gradient...
-- [ ] Add an fps option for chemiscope and change its default value to 20
-- [ ] Set a maximum number of point for chemiscope and by default strides the structures until getting this maximum number
-- [ ] Add the option in chemiscope to wrap the structures in the cell, center them, orient them for visualization purposes
+- [X] Set a maximum number of points to be plotted for scatter plots
+- [X] Make a plot of the log of the bias along the CV used for biasing and superimpose the FES
+- [X] Make a plot showing the distribution of points with energy and their associated log bias
+- [X] Make chemiscope more versatile passing structures and a dictionary, certain entries can be specified for x, y, coloring
+- [ ] Add to chemiscope options to color atoms, shade the bonds, add gradient arrows...
+- [X] Add an fps option for chemiscope and change its default value to 20
+- [ ] Change nb_levels in grid to a level_step with 0.
 - [ ] Make multiple plots with all the trj, all the fes
 
 ### helpers.py

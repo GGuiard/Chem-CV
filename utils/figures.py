@@ -15,8 +15,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mlcolvar.utils.plot import cm_fessa
-from chemiscope import write_input, all_atomic_environments
-from ase.data import covalent_radii, chemical_symbols
+import chemiscope
+import ase.data
 
 # ---------------------------------------------------------------------------
 # Global rcParams
@@ -55,25 +55,25 @@ mpl.rcParams.update({
 # Trajectories
 # -----------------------------------------------------------------------
 
-def trj(
+def plot_trj_1d(
     time: np.ndarray,
     cv: np.ndarray,
+    color: np.ndarray | None = None,
     label: str = "CV",
-    color_value: np.ndarray | None = None,
     color_label: str = r"$\log(bias)$",
     bounds: tuple = (None, None),
-    time_unit: str | None = "ps",
     scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
 ) -> plt.Figure:
-    """
-    1-D CV trajectory with optional colormap.
-    """
+    """1-D CV trajectory with optional colormap."""
     fig, ax = plt.subplots(layout="constrained")
 
-    if color_value is not None:
+    stride = max(1, int(len(cv)//max_nb_points))
+
+    if color is not None:
         sc = ax.scatter(
-            time, cv,
-            c=color_value,
+            time[::stride], cv[::stride],
+            c=color[::stride],
             s=scatter_size,
             cmap=cm_fessa,
             linewidths=0,
@@ -83,36 +83,54 @@ def trj(
 
     else:
         ax.scatter(
-            time, cv,
+            time[::stride], cv[::stride],
             s=scatter_size,
             linewidths=0
         )
 
-    ax.set_xlabel(f"time [{time_unit}]" if time_unit else "time")
+    ax.set_xlabel(f"time [ps]")
     ax.set_ylabel(label)
     ax.set_ylim(bounds)
     return fig
 
 
-def trj_energy(time: np.ndarray, energy: np.ndarray) -> plt.Figure:
+def plot_trj_energy(
+    time: np.ndarray,
+    energy: np.ndarray,
+    scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
+) -> plt.Figure:
     """Unbiased energy trajectory."""
     fig, ax = plt.subplots(layout="constrained")
-    ax.plot(time, energy)
+    stride = max(1, int(len(time)//max_nb_points))
+    ax.scatter(
+        time[::stride], energy[::stride]-np.min(energy[::stride]),
+        s=scatter_size, linewidths=0,
+    )
     ax.set_xlabel("time [ps]")
     ax.set_ylabel("E [eV]")
     return fig
 
 
-def trj_bias(time: np.ndarray, logbias: np.ndarray) -> plt.Figure:
+def plot_trj_bias(
+    time: np.ndarray,
+    logbias: np.ndarray,
+    scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
+) -> plt.Figure:
     """Log of the OPES bias trajectory."""
     fig, ax = plt.subplots(layout="constrained")
-    ax.plot(time, logbias)
+    stride = max(1, int(len(time)//max_nb_points))
+    ax.scatter(
+        time[::stride], -logbias[::stride],
+        s=scatter_size, linewidths=0,
+    )
     ax.set_xlabel("time [ps]")
-    ax.set_ylabel(r"\log(bias)")
+    ax.set_ylabel(r"$-\log(bias)$")
     return fig
 
 
-def trj_rct(time: np.ndarray, rct: np.ndarray) -> plt.Figure:
+def plot_trj_rct(time: np.ndarray, rct: np.ndarray) -> plt.Figure:
     """OPES reweighting factor c(t) trajectory."""
     fig, ax = plt.subplots(layout="constrained")
     ax.plot(time, rct)
@@ -121,7 +139,7 @@ def trj_rct(time: np.ndarray, rct: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_zed(time: np.ndarray, zed: np.ndarray) -> plt.Figure:
+def plot_trj_zed(time: np.ndarray, zed: np.ndarray) -> plt.Figure:
     """OPES partition-function estimate Z trajectory."""
     fig, ax = plt.subplots(layout="constrained")
     ax.plot(time, zed)
@@ -130,7 +148,7 @@ def trj_zed(time: np.ndarray, zed: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_n(time: np.ndarray, n_eff: np.ndarray, n_ker: np.ndarray) -> plt.Figure:
+def plot_trj_n(time: np.ndarray, n_eff: np.ndarray, n_ker: np.ndarray) -> plt.Figure:
     """Effective sample count and kernel count trajectories."""
     fig, ax = plt.subplots(layout="constrained")
     ax.plot(time, n_eff, label=r"$n_{eff}$")
@@ -141,13 +159,8 @@ def trj_n(time: np.ndarray, n_eff: np.ndarray, n_ker: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_emec(time: np.ndarray, emec: np.ndarray) -> plt.Figure:
-    """
-    Mechanical energy trajectory with mean ± std band.
-
-    The first frame is discarded (often an outlier after equilibration).
-    Plain scalar notation prevents matplotlib from adding an axis offset.
-    """
+def plot_trj_emec(time: np.ndarray, emec: np.ndarray) -> plt.Figure:
+    """Total energy trajectory with mean ± std band."""
     time = time[1:]
     emec = emec[1:]
     mean, std = np.mean(emec), np.std(emec)
@@ -155,16 +168,16 @@ def trj_emec(time: np.ndarray, emec: np.ndarray) -> plt.Figure:
     fig, ax = plt.subplots(layout="constrained")
     ax.fill_between(
         time,
-        mean - std,
-        mean + std,
+        -std,
+        std,
         alpha=0.20,
         linewidth=0,
+        label=f"std = {std:.4g} eV",
     )
-    ax.plot(time, emec)
+    ax.plot(time, emec-mean)
     ax.axhline(
-        mean,
+        0,
         linestyle="--",
-        label=f"mean = {mean:.4g} eV"
     )
 
     ax.set_xlabel("time [ps]")
@@ -175,7 +188,7 @@ def trj_emec(time: np.ndarray, emec: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_temperature(time: np.ndarray, temperature: np.ndarray) -> plt.Figure:
+def plot_trj_temperature(time: np.ndarray, temperature: np.ndarray) -> plt.Figure:
     """Temperature trajectory with mean ± std band."""
     mean, std = np.mean(temperature), np.std(temperature)
 
@@ -186,12 +199,13 @@ def trj_temperature(time: np.ndarray, temperature: np.ndarray) -> plt.Figure:
         mean + std,
         alpha=0.20,
         linewidth=0,
+        label=f"std = {std:.1f} K",
     )
     ax.plot(time, temperature)
     ax.axhline(
         mean,
         linestyle="--",
-        label=f"mean = {mean:.1f} K"
+        label=f"mean = {mean:.1f} K",
     )
 
     ax.set_xlabel("time [ps]")
@@ -200,27 +214,28 @@ def trj_temperature(time: np.ndarray, temperature: np.ndarray) -> plt.Figure:
     return fig
 
 
-def trj_2d(
+def plot_trj_2d(
     cv1: np.ndarray,
     cv2: np.ndarray,
+    color: np.ndarray | None = None,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
-    color_value: np.ndarray | None = None,
     color_label: str = r"$\log(bias)$",
     cv1_bounds: tuple = (None, None),
     cv2_bounds: tuple = (None, None),
     scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
     symmetric: bool = False,
 ) -> plt.Figure:
-    """
-    2-D scatter of two CVs with optional colormap.
-    """
+    """2-D scatter of two CVs with optional colormap."""
     fig, ax = plt.subplots(layout="constrained")
 
-    if color_value is not None:
+    stride = max(1, int(len(cv1)//max_nb_points))
+
+    if color is not None:
         sc = ax.scatter(
-            cv1, cv2,
-            c=color_value,
+            cv1[::stride], cv2[::stride],
+            c=color[::stride],
             s=scatter_size,
             cmap=cm_fessa,
             linewidths=0,
@@ -230,7 +245,7 @@ def trj_2d(
         
     else:
         ax.scatter(
-            cv1, cv2,
+            cv1[::stride], cv2[::stride],
             s=scatter_size,
             linewidths=0
         )
@@ -248,16 +263,16 @@ def trj_2d(
 # Densities
 # -----------------------------------------------------------------------
 
-def density(
+def plot_density_1d(
     grid: np.ndarray,
-    density_values: np.ndarray,
+    density: np.ndarray,
     label: str = "CV",
     bounds: tuple = (None, None),
 ) -> plt.Figure:
     """Normalised probability density along a 1-D CV."""
     fig, ax = plt.subplots(layout="constrained")
-    ax.fill_between(grid, density_values, alpha=0.25, linewidth=0)
-    ax.plot(grid, density_values)
+    ax.fill_between(grid, density, alpha=0.25, linewidth=0)
+    ax.plot(grid, density)
     ax.set_xlabel(label)
     ax.set_xlim(bounds)
     ax.set_ylabel("Probability density")
@@ -265,23 +280,21 @@ def density(
     return fig
 
 
-def density_2d(
+def plot_density_2d(
     grid: list[np.ndarray],
-    density_values: np.ndarray,
+    density: np.ndarray,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
     density_min: float = 0.01,
     symmetric: bool = False,
 ) -> plt.Figure:
-    """
-    2-D probability density.
-    """
+    """2-D probability density."""
     fig, ax = plt.subplots(layout="constrained")
 
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        np.ma.masked_where(density_values<=density_min, density_values).T,
+        np.ma.masked_where(density<=density_min, density).T,
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",
@@ -301,62 +314,59 @@ def density_2d(
 # Free Energy Surface
 # -----------------------------------------------------------------------
 
-def fes(
+def plot_fes_1d(
     grid: np.ndarray,
-    fes_values: np.ndarray,
-    fes_error: np.ndarray | None,
+    fes: np.ndarray,
+    err: np.ndarray | None,
     label: str = "CV",
     bounds: tuple = (None, None),
     fes_max: float | None = None,
 ) -> plt.Figure:
-    """
-    1-D free-energy surface with optional error band.
-    """
+    """1-D free-energy surface with optional error band."""
     fig, ax = plt.subplots(layout="constrained")
 
-    if isinstance(fes_error, np.ndarray):
+    if isinstance(err, np.ndarray):
         ax.fill_between(
             grid,
-            fes_values - fes_error,
-            fes_values + fes_error,
+            fes - err,
+            fes + err,
             alpha=0.25,
             linewidth=0,
-            label=r"$\pm \sigma$ (bootstrap)",
         )
-        # ax.legend()
 
-    ax.plot(grid, fes_values)
+    ax.plot(grid, fes)
     ax.set_xlabel(label)
     ax.set_xlim(bounds)
     ax.set_ylabel(f"FES [eV]")
-    ax.set_ylim(np.min(fes_values), fes_max)
+    ax.set_ylim(np.min(fes), fes_max)
     return fig
 
 
-def fes_2d(
+def plot_fes_2d(
     grid: list[np.ndarray],
-    fes_values: np.ndarray,
+    fes: np.ndarray,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
     fes_max: float | None = None,
+    nb_levels: int = 11,
     symmetric: bool = False,
 ) -> plt.Figure:
     """2-D free-energy surface."""
     fig, ax = plt.subplots(layout="constrained")
 
-    if fes_max is None: fes_max = np.max(fes_values)
-    extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
+    if fes_max is None: fes_max = np.max(fes)
 
-    im = ax.imshow(
-        np.ma.masked_where(fes_values>=fes_max, fes_values).T,
-        origin="lower",
-        extent=extent,
-        aspect="equal" if symmetric else "auto",
+    levels = np.linspace(np.min(fes), fes_max, nb_levels)
+
+    cf = ax.contourf(
+        grid[0],
+        grid[1],
+        np.ma.masked_where(fes>=fes_max, fes).T,
+        levels,
         cmap=cm_fessa,
-        interpolation="bicubic",
     )
 
-    cbar = fig.colorbar(im, ax=ax)
+    cbar = fig.colorbar(cf, ax=ax)
     cbar.set_label(f"FES [eV]")
 
     ax.set_xlabel(cv1_label)
@@ -366,22 +376,20 @@ def fes_2d(
     return fig
 
 
-def fes_error_2d(
+def plot_fes_err_2d(
     grid: list[np.ndarray],
-    fes_error: np.ndarray,
+    err: np.ndarray,
     cv1_label: str = r"$CV_1$",
     cv2_label: str = r"$CV_2$",
     symmetric: bool = False,
 ) -> plt.Figure:
-    """
-    2-D FES error.
-    """
+    """2-D FES error."""
     fig, ax = plt.subplots(layout="constrained")
 
     extent = [grid[0].min(), grid[0].max(), grid[1].min(), grid[1].max()]
 
     im = ax.imshow(
-        np.ma.masked_invalid(fes_error).T,
+        np.ma.masked_invalid(err).T,
         origin="lower",
         extent=extent,
         aspect="equal" if symmetric else "auto",
@@ -400,64 +408,190 @@ def fes_error_2d(
 
 
 # -----------------------------------------------------------------------
+# Bias and Energy plots
+# -----------------------------------------------------------------------
+
+def plot_cv_bias(
+    cv: np.ndarray,
+    bias: np.ndarray,
+    color: np.ndarray | None = None,
+    cv_label: str = "CV",
+    color_label: str = "time [ps]",
+    cv_bounds: tuple = (None, None),
+    scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
+) -> plt.Figure:
+    """Scatter of the bias in function of the CV."""
+    fig, ax = plt.subplots(layout="constrained")
+
+    stride = max(1, int(len(cv)//max_nb_points))
+
+    if color is not None:
+        sc = ax.scatter(
+            cv[::stride], -bias[::stride],
+            c=color[::stride],
+            s=scatter_size,
+            cmap=cm_fessa,
+            linewidths=0,
+        )
+        cbar = fig.colorbar(sc, ax=ax)
+        cbar.set_label(color_label)
+
+    else:
+        ax.scatter(
+            cv[::stride], -bias[::stride],
+            s=scatter_size,
+            linewidths=0
+        )
+
+    ax.set_xlabel(cv_label)
+    ax.set_ylabel(r"$-\log(bias)$")
+    ax.set_xlim(cv_bounds)
+    return fig
+
+
+def plot_cv_energy(
+    cv: np.ndarray,
+    energy: np.ndarray,
+    color: np.ndarray | None = None,
+    cv_label: str = "CV",
+    color_label: str = "time [ps]",
+    cv_bounds: tuple = (None, None),
+    scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
+) -> plt.Figure:
+    """Scatter of the energy in function of the CV."""
+    fig, ax = plt.subplots(layout="constrained")
+
+    stride = max(1, int(len(cv)//max_nb_points))
+
+    if color is not None:
+        sc = ax.scatter(
+            cv[::stride], energy[::stride]-np.min(energy[::stride]),
+            c=color[::stride],
+            s=scatter_size,
+            cmap=cm_fessa,
+            linewidths=0,
+        )
+        cbar = fig.colorbar(sc, ax=ax)
+        cbar.set_label(color_label)
+
+    else:
+        ax.scatter(
+            cv[::stride], energy[::stride]-np.min(energy[::stride]),
+            s=scatter_size,
+            linewidths=0
+        )
+
+    ax.set_xlabel(cv_label)
+    ax.set_ylabel("E [eV]")
+    ax.set_xlim(cv_bounds)
+    return fig
+
+
+def plot_energy_bias(
+    energy: np.ndarray,
+    bias: np.ndarray,
+    color: np.ndarray | None = None,
+    color_label: str = "time [ps]",
+    scatter_size: float = 4.0,
+    max_nb_points: int = 10_000,
+) -> plt.Figure:
+    """Correlation between the energy and the bias"""
+    fig, ax = plt.subplots(layout="constrained")
+
+    stride = max(1, int(len(energy)//max_nb_points))
+
+    if color is not None:
+        sc = ax.scatter(
+            energy[::stride]-np.min(energy[::stride]),
+            -bias[::stride],
+            c=color[::stride],
+            s=scatter_size,
+            cmap=cm_fessa,
+            linewidths=0,
+        )
+        cbar = fig.colorbar(sc, ax=ax)
+        cbar.set_label(color_label)
+
+    else:
+        ax.scatter(
+            energy[::stride]-np.min(energy[::stride]),
+            -bias[::stride],
+            s=scatter_size,
+            linewidths=0
+        )
+
+    ax.set_xlabel("E [eV]")
+    ax.set_ylabel(r"$-\log(bias)$")
+    return fig
+ 
+
+# -----------------------------------------------------------------------
 # Chemiscope
 # -----------------------------------------------------------------------
 
-#TODO: generalize
-def chemiscope(
+def plot_chemiscope(
     structures,
-    time,
-    d1,
-    d2,
-    chemcv = {},
-    color = None,
+    info,
+    map_x: str = None,
+    map_y: str = None,
+    map_color: str = None,
+    atom: str = None,
+    # bond: str = None,
+    # gradient: str = None,
     adapt_radius: bool = False,
-    save_directory: str = "",
-    save_name: str = "chemiscope",
+    fps: int = 20,
+    fname: str = "chemiscope",
 ):
-    properties = {"d1": {"target": "structure",
-                        "values": d1,
-                        "description": "Distance between the carbon atom and the first chlorin atom"},
-                  "d2": {"target": "structure",
-                        "values": d2,
-                        "description": "Coordination between the carbon atom and the second chlorin atom"},
-                  "time": {"target": "structure",
-                           "values": time,
-                           "description": "time [ps]"}}
-    
-    for name, value in chemcv.items():
-        properties[name] = {"target": "structure", "values": value}
 
-    settings = {"target": "structure",
-                "map": {"x": {"property": "d1"},
-                        "y": {"property": "d2"},
-                        "color": {"property": "time"}},
-                "structure": [{"bonds": True,
-                               "spaceFilling": False,
-                               "keepOrientation": True,
-                               "playbackDelay": 200}]}
+    properties = {}
+    for label, content in info.items():
+        properties[label] = {"target": "structure", "values": content.to_numpy().T}
 
-    if isinstance(color, (list, np.ndarray)):
-        properties["color"] = {"target": "atom",
-                               "values": color.ravel(),
-                               "description": "charge [e]"}
-        settings["structure"][0] = settings["structure"][0] | {"atomLabels": True,
-                                                               "labelsProperty": "color",
-                                                               "color": {"property": "color", "palette": "bwr", "min":-1, "max":1}}
+    environments = chemiscope.all_atomic_environments(structures)
+
+    shapes = {}
+
+    settings = {
+        "target": "structure",
+        "map": {
+            "x": {"property": map_x},
+            "y": {"property": map_y},
+            "color": {"property": map_color}
+        },
+        "structure": [{
+            "bonds": True,
+            "spaceFilling": False,
+            "keepOrientation": True,
+            "playbackDelay": int(1000//fps),
+        }],
+    }
+
+    if atom is not None:
+        nb_atoms = len(structures[0])
+        values = np.array([info[f"{atom}.{i}"].to_list() for i in range(nb_atoms)])
+        properties["_atom"] = {"target": "atom", "values": values.ravel()}
+        settings["structure"][0] += {
+            "atomLabels": True,
+            "color": {
+                "property": "_atom",
+                "palette": "bwr",
+                "min":-1,
+                "max":1,
+            },
+        }
         
     if adapt_radius:
         atom_radius = []
         for atoms in structures:
             for atom in atoms:
-                atom_radius.append({"radius": covalent_radii[chemical_symbols.index(atom.symbol)]})
-        shapes = {"selection": {"kind": "sphere", "parameters": {"atom": atom_radius}}}
+                atom_radius.append({"radius": ase.data.covalent_radii[ase.data.chemical_symbols.index(atom.symbol)]})
+        shapes["selection"] = {"kind": "sphere", "parameters": {"atom": atom_radius}}
         settings["shapes"] = "selection"
-    else:
-        shapes = {}
 
-    environments = all_atomic_environments(structures)
+    chemiscope.write_input(f"{fname}.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
 
-    write_input(f"{save_directory}/{save_name}.json.gz", structures=structures, properties=properties, environments=environments, shapes=shapes, settings=settings)
 
 # -----------------------------------------------------------------------
 # Correlation
