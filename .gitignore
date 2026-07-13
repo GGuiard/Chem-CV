@@ -10,6 +10,10 @@
 
 !*/
 
+!01_conda_install.sh
+!02_libtorch_install.sh
+!03_plumed_install.sh
+
 __pycache__/
 /my_mlcolvar/
 /my_ase/

@@ -672,7 +672,7 @@ def pred(
         if bounds[0] is None:
             bounds[0] = min(min([min(arr) for arr in ref]), min([min(arr) for arr in pred]))
         if bounds[1] is None:
-            bounds[0] = max(max([max(arr) for arr in ref]), max([max(arr) for arr in pred]))
+            bounds[1] = max(max([max(arr) for arr in ref]), max([max(arr) for arr in pred]))
         
         if labels is None:
             labels = [str(i) for i in range(len(ref))]

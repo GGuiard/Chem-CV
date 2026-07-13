@@ -81,6 +81,10 @@ Overall the code need more comments, at least for the functions, with specified 
 - [ ] Rename it for ChemCV
 - [ ] Import function from submodules instead of the whole submodule
 - [ ] Make installable with pip
+- [ ] Should globally be simplified or professionally finished
+- [ ] The MultiAccessing should be based on different types (chemcvs, atoms, MO...) which means the three should have types for each indices
+- [ ] ChemCV should be easier to use for a specified CV and a per-structure getting of the data, just like using the functions in orca_parser.py alone
+- [ ] Should flush the info in a pandas csv
 - [ ] Be compatible for different specified parser (even if ORCA is the only one available)
 - [ ] The parser should extract the descriptors which are represented in a tree way, while ChemCV make a few combinations of them
 - [ ] Implement a module for basic modeling
@@ -93,6 +97,7 @@ Overall the code need more comments, at least for the functions, with specified 
 ## my_ase
 
 - [X] Changed the plumed calculator to convert the potential energy to float but the change should be made in franken
+- [ ] Remove the warning message when doing EnGrad with the ORCA Calculator
 
 ## my_mlcolvar
 
